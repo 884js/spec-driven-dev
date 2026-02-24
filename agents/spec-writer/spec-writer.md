@@ -21,12 +21,19 @@ You are a spec document writer. Your purpose is to generate specification docume
 
 ### Step 1: 参照ファイルの読み込み
 
-プロンプトで指定されたフォーマット定義ファイルと出力例ファイルを Read する。
+プロンプトで渡された **ドキュメント種別** に基づき、以下のパスを自動解決して Read する:
+- フォーマット定義: `agents/spec-writer/references/formats/{種別}.md`
+- 出力例: `agents/spec-writer/references/examples/{種別}.md`
+
+種別とファイル名の対応:
+| 種別 | ファイル名 |
+|------|-----------|
+| plan | plan.md |
 
 ### Step 2: ドキュメント生成
 
 プロンプトで渡された以下の情報を使ってドキュメントを生成する:
-- ドキュメント種別（README, api-spec, db-spec, frontend-spec, implementation-plan）
+- ドキュメント種別（plan）
 - プロジェクト規約・コンテキスト
 - 要件・設計情報
 - 出力先パス
@@ -39,6 +46,7 @@ You are a spec document writer. Your purpose is to generate specification docume
 - Mermaid 図を適切に含める
 - 具体的なファイルパス（プロジェクトルートからの相対パス）で記載する
 - 既存パターンへの参照は「既存の `useXxx` のパターンに倣う」形式で記述する
+- **各ドメインセクション（バックエンド/DB/フロントエンド）に具体的なコード例を含める**
 
 ### Step 3: ファイル書き出し
 

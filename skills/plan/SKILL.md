@@ -1,184 +1,246 @@
 ---
 name: plan
-description: "Use when detail is complete and implementation planning is needed. Invoke for task breakdown, dependency ordering, impact analysis, and test strategy. Requires detail first. 実装計画, タスク分解, テスト方針."
-allowed-tools: Read, Glob, Grep, Write, Edit, Task
+description: "Use when starting a new feature spec. Invoke for requirements hearing, technical design, and implementation planning — all in one command. Generates a unified plan.md covering requirements, API/DB/frontend design, tasks, and test strategy. 仕様書作成, 要件定義, 設計, 実装計画."
+allowed-tools: Read, Glob, Grep, Write, Edit, Task, Bash
 metadata:
-  triggers: implementation plan, task breakdown, test strategy, impact analysis, 実装計画, タスク分解, テスト方針
+  triggers: create spec, new spec, requirements, plan, design, 仕様書作成, 要件定義, 概要設計, 詳細設計, 実装計画, タスク分解
 ---
 
-# 実装計画（Plan）
+# 設計・実装計画（Plan）
 
-設計（detail）で作成したドメインdocをもとに、**「どう進めるか」** の実装計画を策定する。
-各ドメインdocに含まれるファイル構成・テスト情報を **横断的に統合** し、
-ドメイン間の依存関係を考慮した実装順序を策定する。
-最後に spec-reviewer で仕様書全体の整合性をチェックし、品質を担保する。
+要件ヒアリングから技術設計・実装計画までを **1コマンド** で完了する。
+対話で要件を確認しつつ、技術設計はモデルが一気に生成 → ユーザーレビューの「ハイブリッド」方式。
 
-入力: `docs/{feature-name}/` の README.md + 各ドメインdoc
-出力: implementation-plan.md を生成（実装タスク、影響範囲、テスト方針）
+入力: ユーザーの要求（$ARGUMENTS または対話）
+出力: `docs/{feature-name}/plan.md`（全情報を統合した1ファイル）+ `project-context.md`
 
-**パスルール**: `docs/{feature-name}/` はカレントディレクトリ直下。`{feature-name}` は日本語のシンプルな名前（パス区切り不可）
+**出力先ルール**:
+- `docs/{feature-name}/` は **カレントディレクトリ直下** に作成する
+- `{feature-name}` は **日本語のシンプルな名前**（例: `キャンペーン通知`）。パス区切り不可
 
-仕様書完成後の修正は `/feature-spec:revise` で行う。
+plan.md 完成後の修正は `/feature-spec:revise` で行う。
 
 ## ワークフロー
 
 ```
-Step 0: README.md + 全ドメインdoc 読み込み
-Step 1: 横断的な実装タスク策定（依存関係付き）
-Step 2: 影響範囲の評価  ← code-researcher で調査
-Step 3: テスト方針の整理（各ドメインdocのテスト情報を統合 + 横断テスト追加）
-Step 4: implementation-plan.md 生成 ← spec-writer
-Step 5: 品質レビュー    ← spec-reviewer エージェント
-Step 6: README.md 更新（設計ドキュメント表に追加のみ）
+Step 1: 要件ヒアリング（対話）
+Step 2: コンテキスト収集 + コード調査 + Git 履歴分析（3並列）
+        ├─ context-collector → project-context.md
+        ├─ code-researcher → 既存パターン調査
+        └─ git-analyzer → Git 履歴分析
+Step 3: ソリューション設計（ハイブリッド）
+        ├─ モデルがデータフロー + 各ドメインの設計案を一気に提示
+        └─ ユーザーがレビュー → 修正が必要な部分だけ対話
+Step 4: plan.md 生成 + レビュー
+        ├─ spec-writer → plan.md を生成
+        └─ spec-reviewer → 整合性チェック
 ```
 
 ---
 
-## Step 0: 全ドキュメント読み込み
+## Step 1: 要件ヒアリング
 
-スキル起動直後に、既存のドキュメントを全て読み込む:
+### 1-a. 初期ヒアリング
 
+$ARGUMENTS が渡されている場合は、それを初期要求として扱い、不明点があれば AskUserQuestion で確認する。
+
+$ARGUMENTS がない場合は、AskUserQuestion で以下を確認する:
+- 「どんな機能を追加したいですか？」（ユーザーストーリー: 誰が、何を、なぜしたいのか）
+- 「何ができたら完成ですか？」（受入条件）
+- 「スコープ外にすることはありますか？」（スコープ: やること / やらないこと）
+- 非機能要件について確認（特にない場合はスキップ可）:
+  - 「データ量の想定は？」（例: 1ユーザーあたり何件？）
+  - 「認可ルールは？」（誰がこの機能を使えるか）
+  - 「他に気になる非機能要件は？」（パフォーマンス、アクセシビリティ等）
+
+1-2往復で明確になったら次へ。
+
+### 1-b. 機能粒度の判定
+
+ヒアリング結果をもとに、機能の粒度が適切か判定する。
+
+**分割判断基準**（いずれかに該当する場合、分割案を提示）:
+- 受入条件が8個以上
+- 独立した主要フローが2つ以上
+- 新規テーブルが3つ以上
+- 新規画面が3つ以上
+
+該当する場合:
 ```
-Glob docs/**/README.md
+この機能は規模が大きいため、分割を提案します:
+
+Phase 1: {機能名A}（{概要}）
+Phase 2: {機能名B}（{概要}）← Phase 1 に依存
+
+分割して進めますか？それとも1つの機能として進めますか？
 ```
 
-$ARGUMENTS に feature-name が指定されている場合はそのディレクトリを使用。
-複数の仕様書ディレクトリがある場合はユーザーに選択を求める。
-
-```
-Read docs/{feature-name}/README.md
-Read docs/{feature-name}/project-context.md
-Read docs/{feature-name}/api-spec.md      （存在する場合）
-Read docs/{feature-name}/db-spec.md       （存在する場合）
-Read docs/{feature-name}/frontend-spec.md （存在する場合）
-```
-
-読み込んだ内容の概要をユーザーに提示:
-
-```
-設計ドキュメントを読み込みました:
-- 機能: {feature summary}
-- API: {エンドポイント数と概要}
-- DB: {テーブル/カラムの概要}
-- フロントエンド: {コンポーネント数と概要}
-- プロジェクト規約: {ビルド/テストコマンド、命名規則等}
-
-これらをもとに実装計画を策定します。
-```
+分割する場合は Phase ごとに個別の `docs/{feature-name}/` を作成する。
 
 ---
 
-## Step 1: 横断的な実装タスク策定
+## Step 2: コンテキスト収集 + コード調査 + Git 履歴分析（3並列）
 
-各ドメインdocのファイル構成セクションを統合し、依存関係を考慮したタスク分解を提示。
+### 2-a〜c を並列実行
 
-**統合の観点**:
-- api-spec.md のファイル構成 → DB変更後に実装
-- db-spec.md のファイル構成 → 最初に実装（他の依存元）
-- frontend-spec.md のファイル構成 → API実装後に実装
-- ドメイン間の依存関係（DB → API → フロントエンド）
+以下の3つの調査を **同時に** Task で起動する:
 
-→ タスク一覧 + 依存関係図（Mermaid）を作成
-→ 「タスク分解と順序はこれで良いですか？」
+#### 2-a. コンテキスト自動収集
 
----
+**context-collector** エージェントにプロジェクト全体の調査を委譲。
 
-## Step 2: 影響範囲の評価
+```
+Task(context-collector) を起動:
+  プロンプト: 「このプロジェクトのコンテキストを収集してください。
+  CLAUDE.md、ディレクトリ構造、package.json、型定義、DBスキーマ、
+  既存仕様書を調査し、構造化された要約を返してください。
+  フレームワーク制約、過去の教訓、DBリレーション構造も調査してください。
+  追加機能の概要: {Step 1 で把握した機能概要}
+  関連しそうなテーブルやモジュールがあれば、関連する既存機能として報告してください。」
+```
 
-各ドメインdocの変更ファイルを統合し、既存機能への影響を評価。
+#### 2-b. コード調査
 
-**code-researcher で依存関係を調査**:
+**code-researcher** エージェントに技術パターンの調査を委譲。
 
 ```
 Task(code-researcher) を起動:
-  プロンプト: 「以下のファイルの依存関係・参照元を調査してください:
-  {各ドメインdocのファイル構成から抽出した変更対象ファイル一覧}
-  - バックエンド: これらのファイルを import/参照している箇所と、影響を受ける既存機能を報告してください
-  - フロントエンド: コンポーネント/フックの使用箇所と、影響を受ける画面を報告してください（フロントエンド設計がある場合）」
+  プロンプト: 「このプロジェクトの技術パターンを調査してください。
+  - バックエンド: API ルーティング、ハンドラ、型定義、エラーハンドリング、バリデーション、データフローパターン
+  - DB: スキーマ定義、マイグレーション、テーブル構造、リレーション、ID生成
+  - フロントエンド: コンポーネント構成、UIライブラリ、Props型、状態管理、フォーム処理、API通信パターン（フロントエンドがある場合）
+  - エラーハンドリング・認証パターン: エラー型、レスポンス形式、認証方式、認可パターン
+  機能概要: {Step 1 で把握した機能概要}」
 ```
 
-**調査結果をもとに評価**:
-- 既存機能への影響（影響内容、リスク、対策）
-- 後方互換性
-- パフォーマンスへの影響
-- セキュリティ考慮事項
+#### 2-c. Git 履歴分析
 
-→ 影響範囲をまとめて提示
-→ 「影響範囲の評価を確認してください」
+**git-analyzer** エージェントに Git 履歴の調査を委譲。
+
+```
+Task(git-analyzer) を起動:
+  プロンプト: 「このプロジェクトの Git 履歴を分析してください。
+  機能概要: {Step 1 で把握した機能概要}
+  以下を調査してください:
+  - 機能概要に関連するファイルの変更履歴サマリー
+  - ホットスポット（直近3ヶ月で活発に変更されているファイル）
+  - 最近のリファクタリング（大規模変更）
+  - 並行開発リスク（同じファイルを複数人が変更していないか）」
+```
+
+### 2-d. 結果の提示
+
+3つの結果が揃ったら、ユーザーに要約を提示:
+
+```
+プロジェクトの構造を把握しました:
+- フレームワーク: {framework}
+- 主要ディレクトリ: {dirs}
+- DB: {db type}
+- 既存の型定義: {N}ファイル
+- テスト/ビルドコマンド: {commands}
+```
+
+context-collector の出力を `docs/{feature-name}/project-context.md` として Write。
+
+### 2-e. 並行開発チェック
+
+`docs/` 配下に他の機能の仕様書がないか確認:
+
+```
+Glob docs/**/plan.md
+```
+
+他の仕様書が存在する場合:
+- 各仕様書の実装タスクセクションを確認し、今回の機能と変更対象ファイルに重複がないかチェック
+- 重複がある場合はユーザーに報告
 
 ---
 
-## Step 3: テスト方針の整理
+## Step 3: ソリューション設計（ハイブリッド）
 
-各ドメインdocのテストセクションを統合し、横断テストを追加。
+コンテキスト収集とコード調査の結果を踏まえ、**データフロー + 各ドメインの設計案を一気に提示** する。
 
-**統合の観点**:
-- api-spec.md のテスト → APIテスト
-- db-spec.md のテスト → DBマイグレーションテスト
-- frontend-spec.md のテスト → UIコンポーネントテスト
-- **横断テスト**: E2Eテスト、統合テスト（ドメイン間の結合）
+### 3-a. 省略判定
 
-→ テスト一覧 + 手動検証チェックリスト + ビルド確認コマンドを作成
-→ 「テスト方針を確認してください」
+要件とデータフローをもとに、どのドメインが必要かを判定し提示:
+
+```
+この機能では以下の設計を含めます:
+- [x] バックエンド変更（API設計）
+- [x] DB変更（スキーマ設計）
+- [x] フロントエンド変更（UI設計）
+- [ ] (該当なしの領域は省略)
+```
+
+**省略判定**:
+- API変更なし → バックエンド変更セクション省略
+- DB変更なし → DB変更セクション省略
+- UI変更なし → フロントエンド変更セクション省略
+
+### 3-b. 設計案の一括提示
+
+**project-context.md で把握した既存パターン・命名規則に従って** 、以下を一度に提示する:
+
+1. **データフロー**: メインユースケースのシーケンス図
+2. **バックエンド設計**: エンドポイント一覧、主要な型定義、エラーケース
+3. **DB設計**: テーブル構造、リレーション、モデルコード
+4. **フロントエンド設計**: コンポーネントツリー、主要Props、ワイヤーフレーム
+
+→ 「設計案を確認してください。修正したい箇所があれば指摘してください。」
+
+### 3-c. レビュー対話
+
+ユーザーの指摘に対して修正。**各ドメインごとの個別確認は不要** — 全体を見てから修正点だけ指摘する方式。
+
+修正が確定するまで対話を続ける。確認が取れたら Step 4 へ。
 
 ---
 
-## Step 4: implementation-plan.md 生成
+## Step 4: plan.md 生成 + レビュー
 
-Step 1〜3 で策定した実装計画を **spec-writer** に委譲して生成:
+### 4-a. plan.md 生成
+
+Step 1〜3 で確定した内容を **spec-writer** に委譲して生成:
 
 ```
 Task(spec-writer) を起動:
-  プロンプト: 「docs/{feature-name}/implementation-plan.md を生成してください。
-  ドキュメント種別: implementation-plan（実装計画）
-  フォーマット定義: skills/outline/references/formats/implementation-plan.md を Read して参照
-  出力例: skills/outline/references/examples/implementation-plan.md を Read して参照
+  プロンプト: 「docs/{feature-name}/plan.md を生成。種別: plan
   プロジェクト規約: {project-context.md の要約}
-  実装計画の内容:
-    実装タスク: {Step 1 で確定したタスク一覧と依存関係}
-    影響範囲: {Step 2 で確定した影響範囲・リスク}
-    テスト方針: {Step 3 で確定したテスト一覧・チェックリスト・ビルドコマンド}
-  生成完了後、ファイルの概要を5行以内で返してください。」
+  設計内容:
+    概要: {Step 1 で確定した要件}
+    受入条件: {Step 1 で確定した受入条件}
+    スコープ: {Step 1 で確定したスコープ}
+    データフロー: {Step 3 で確定したシーケンス図}
+    バックエンド: {Step 3 で確定したAPI設計}
+    DB: {Step 3 で確定したDB設計}
+    フロントエンド: {Step 3 で確定したフロントエンド設計}
+    影響範囲: {Step 3 で把握した影響}
+    実装タスク: {依存関係付きタスク一覧}
+    テスト方針: {テスト一覧・チェックリスト・ビルドコマンド}」
 ```
 
----
+### 4-b. 品質レビュー
 
-## Step 5: 品質レビュー
-
-全ドキュメントが揃ったら、**spec-reviewer** エージェントで整合性をチェック。
+**spec-reviewer** エージェントで plan.md 内のセクション間整合性をチェック。
 
 ```
 Task(spec-reviewer) を起動:
-  プロンプト: 「docs/{feature-name}/ 内の全ドキュメント（README.md, api-spec.md,
-  db-spec.md, frontend-spec.md, implementation-plan.md）を読み込み、
-  ドキュメント間の整合性、型定義の一致、テスト網羅性をレビューしてください。」
+  プロンプト: 「docs/{feature-name}/plan.md を読み込み、
+  セクション間の整合性（データフロー↔API設計↔DB設計↔フロントエンド設計↔実装タスク）、
+  型定義の一致、テスト網羅性をレビューしてください。」
 ```
-
-**レビュー観点**:
-- ドメインdoc間整合性（API型↔DB型↔Props型）
-- エンドポイント整合性（README.md のシーケンス図 ↔ api-spec.md）
-- ファイル構成整合性（各ドメインdocのファイル構成 ↔ 実装タスク）
-- テスト網羅性（受入条件 ↔ テスト項目）
-- 影響範囲網羅性（変更ファイル ↔ 影響評価）
 
 **結果の処理**:
-- **PASS**: Step 6 に進む
-- **NEEDS_FIX**: 問題点をユーザーに提示し、該当ドキュメントを修正 → 必要に応じて再レビュー
+- **PASS**: 完了メッセージを表示
+- **NEEDS_FIX**: 問題点をユーザーに提示し、plan.md を修正 → 必要に応じて再レビュー
 
----
-
-## Step 6: README.md 更新
-
-既存の README.md を Read し、設計ドキュメント表に `implementation-plan.md` へのリンクを追加:
+### 4-c. 完了
 
 ```
-| [実装計画](./implementation-plan.md) | 実装タスク、影響範囲、テスト方針 | 完了 |
-```
+plan.md が完成しました。
 
-```
-「仕様書が完成しました。
+次のステップ:
 - 実装に進む場合は `/feature-spec:implement` を使用してください
-- 修正したい箇所がある場合は `/feature-spec:revise` を使用してください」
+- 修正したい箇所がある場合は `/feature-spec:revise` を使用してください
 ```
-
-修正があれば該当ドキュメントを Edit、必要に応じて更新。

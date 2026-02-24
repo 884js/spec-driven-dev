@@ -1,11 +1,13 @@
 {
   "name": "feature-spec",
   "description": "既存システムへの機能追加仕様書を対話的に生成するプラグイン",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "agents": [
     "./agents/context-collector.md",
     "./agents/code-researcher.md",
+    "./agents/git-analyzer.md",
     "./agents/spec-reviewer.md",
-    "./agents/spec-writer.md"
+    "./agents/spec-writer/spec-writer.md",
+    "./agents/implementation-verifier.md"
   ]
 }
