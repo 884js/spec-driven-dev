@@ -12,7 +12,7 @@ metadata:
 対話で要件を確認しつつ、技術設計はモデルが一気に生成 → ユーザーレビューの「ハイブリッド」方式。
 
 入力: ユーザーの要求（$ARGUMENTS または対話）
-出力: `docs/plans/{feature-name}/plan.md`（全情報を統合した1ファイル）+ `project-context.md`
+出力: `docs/plans/{feature-name}/plan.md`（全情報を統合した1ファイル）
 
 **出力先ルール**:
 - `docs/plans/{feature-name}/` は **カレントディレクトリ直下** に作成する
@@ -24,7 +24,7 @@ metadata:
 ```
 Step 1: 要件ヒアリング（対話）
 Step 2: コンテキスト収集 + コード調査 + Git 履歴分析（3並列）
-        ├─ context-collector → project-context.md
+        ├─ context-collector → コンテキスト要約
         ├─ code-researcher → 既存パターン調査
         └─ git-analyzer → Git 履歴分析
 Step 3: ソリューション設計（ハイブリッド）
@@ -140,8 +140,6 @@ Task(git-analyzer) を起動:
 - テスト/ビルドコマンド: {commands}
 ```
 
-context-collector の出力を `docs/plans/{feature-name}/project-context.md` として Write。
-
 ### 2-e. 並行開発チェック
 
 `docs/` 配下に他の機能の仕様書がないか確認:
@@ -179,7 +177,7 @@ Glob docs/plans/**/plan.md
 
 ### 3-b. 設計案の一括提示
 
-**project-context.md で把握した既存パターン・命名規則に従って** 、以下を一度に提示する:
+**context-collector で把握した既存パターン・命名規則に従って** 、以下を一度に提示する:
 
 1. **データフロー**: メインユースケースのシーケンス図
 2. **バックエンド設計**: エンドポイント一覧、主要な型定義、エラーケース
@@ -205,7 +203,7 @@ Step 1〜3 で確定した内容を **spec-writer** に委譲して生成:
 ```
 Task(spec-writer) を起動:
   プロンプト: 「docs/plans/{feature-name}/plan.md を生成。種別: plan
-  プロジェクト規約: {project-context.md の要約}
+  プロジェクト規約: {context-collector の要約}
   設計内容:
     概要: {Step 1 で確定した要件}
     受入条件: {Step 1 で確定した受入条件}

@@ -29,7 +29,6 @@ plan → strategy → implement → verify
 docs/plans/{feature-name}/
 ├── plan.md                      ← plan（設計ドキュメント。plan 完了後は不変）
 ├── progress.md                  ← strategy / implement（実装進捗の単一ソース）
-├── project-context.md           ← plan
 ├── implementation-summary.md    ← verify
 └── troubleshoot-{YYYY-MM-DD}-{N}.md ← troubleshoot（調査レポート）
 ```
