@@ -1,7 +1,13 @@
 # spec-flow
 
-既存システムへの機能追加を **仕様駆動** で進める Claude Code プラグイン。
+仕様駆動で開発を進める Claude Code プラグイン。
 要件ヒアリングから設計・実装・検証までを 5 つのスキルでガイドします。
+
+## モチベーション
+
+AI に計画なしで実装を任せると迷走する。Claude Code のプラン機能で軽減できるが、フォーマットが都度ブレてラリーが増えるのを避けたい。
+
+spec-flow は仕様駆動のワークフローを「フォーマットごと」プラグイン化し、スキルを呼ぶだけで構造化された成果物が出るようにする意図で作った。
 
 ## インストール
 
@@ -12,17 +18,17 @@
 ## ワークフロー
 
 ```
-plan → strategy → implement → verify
-                      ↓
-                  troubleshoot (不具合発生時)
+plan → (strategy) → implement → verify
+                        ↓
+                    troubleshoot (不具合発生時)
 ```
 
 | ステップ | スキル | 役割 |
 |---------|--------|------|
-| 1 | `/spec-flow:plan` | 要件ヒアリング → 技術設計 → 実装計画を `plan.md` に出力 |
-| 2 | `/spec-flow:strategy` | タスクの PR 分割・デリバリー順序を決定し `progress.md` に出力 |
+| 1 | `/spec-flow:plan` | 要件ヒアリング → 技術設計 → 実装計画をプランファイルに出力 |
+| 2 | `/spec-flow:strategy` | (任意) タスクの PR 分割・デリバリー順序を決定 |
 | 3 | `/spec-flow:implement` | plan.md に沿ってブランチ作成〜実装〜PR 作成まで実行 |
-| 4 | `/spec-flow:verify` | 実装コードと plan.md を突合し仕様通りか検証 |
+| 4 | `/spec-flow:verify` | 実装コードとプランを突合し仕様通りか検証 |
 | - | `/spec-flow:troubleshoot` | 実行時の不具合を推測禁止で根本原因調査 |
 
 ## スキル詳細

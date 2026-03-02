@@ -18,6 +18,17 @@ plan.md が完成した後、**plan.md に沿って実装を進める**。
 
 **パスルール**: `docs/plans/{feature-name}/` はカレントディレクトリ直下。`{feature-name}` は英語の kebab-case。パス区切り不可
 
+**コンテキスト保護**: 長い実装セッションでスキルの状態を忘れないよう、各タスクの開始時に `.claude/active-skill.md` を Write で更新する。
+
+書き出す内容:
+- スキル名とステップ
+- feature名
+- 現在のタスク（番号・タスク名・見積）
+- 進捗サマリー（完了数/全数）
+- 次にやること
+
+Step 4 完了時に `.claude/active-skill.md` を Bash rm で削除する。
+
 ## タスク状態管理
 
 progress.md の実装タスク進捗テーブルの **状態列** でタスクの進捗を管理する:
