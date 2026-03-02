@@ -32,6 +32,16 @@ Step 4: plan.md 生成 + レビュー
         └─ spec-reviewer → 整合性チェック
 ```
 
+**コンテキスト保護**: 長い対話でスキルの役割を忘れないよう、各Stepの開始時に `.claude/active-skill.md` を Write で更新する。
+
+書き出す内容:
+- スキル名とステップ
+- feature名
+- 要件サマリー（確定していれば）
+- 次にやること
+
+Step 4 完了時に `.claude/active-skill.md` を Bash rm で削除する。
+
 ---
 
 ## Step 1: 要件ヒアリング
@@ -96,7 +106,7 @@ Task(subagent_type: context-collector):
 #### 2-b. コード調査
 
 ```
-Task(subagent_type: code-researcher):
+Task(subagent_type: code-researcher, run_in_background: true):
   プロンプト: 「このプロジェクトの技術パターンを調査してください。
   - バックエンド: API ルーティング、ハンドラ、型定義、エラーハンドリング、バリデーション、データフローパターン
   - DB: スキーマ定義、マイグレーション、テーブル構造、リレーション、ID生成
@@ -257,6 +267,8 @@ Task(subagent_type: spec-reviewer):
 - **NEEDS_FIX**: 問題点をユーザーに提示し、plan.md を修正 → 必要に応じて再レビュー
 
 ### 4-c. 完了
+
+`.claude/active-skill.md` を Bash rm で削除する。
 
 plan.md の完成をユーザーに伝え、AskUserQuestion で次のアクションを選択させる:
 - `/strategy` を実行 — PR分割・デリバリー順序を計画する
