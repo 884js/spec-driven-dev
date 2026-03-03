@@ -1,6 +1,14 @@
 #!/bin/bash
-STATE_FILE="$CLAUDE_PROJECT_DIR/.claude/active-skill.md"
-if [ -f "$STATE_FILE" ]; then
-  cat "$STATE_FILE"
-fi
+for f in "$CLAUDE_PROJECT_DIR"/docs/plans/*/feature-state.json; do
+  if [ -f "$f" ]; then
+    # 完了済み feature はスキップ
+    if grep -q '"phase".*"done"' "$f"; then
+      continue
+    fi
+    FNAME=$(basename "$(dirname "$f")")
+    echo ""
+    echo "## Feature State ($FNAME)"
+    cat "$f"
+  fi
+done
 exit 0

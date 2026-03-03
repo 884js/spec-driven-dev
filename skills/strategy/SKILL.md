@@ -1,7 +1,7 @@
 ---
 name: strategy
-description: "Generates progress.md with delivery plan and task tracking. Analyzes plan.md tasks, proposes PR grouping, delivery order, and risk assessment through user dialogue. PR分割, デリバリー戦略, 実装戦略."
-allowed-tools: Read, Glob, Grep, Edit, Write, Task, AskUserQuestion
+description: "Generates progress.md with delivery plan and task tracking. Analyzes plan.md tasks, proposes PR grouping, delivery order, and risk assessment through user dialogue. Use when planning PR splitting or delivery strategy."
+allowed-tools: Read Glob Grep Edit Write Task AskUserQuestion
 metadata:
   triggers: strategy, delivery plan, PR分割, デリバリー戦略, 実装戦略, PR splitting
 ---
@@ -48,9 +48,15 @@ plan.md が1つだけの場合はそのまま使用。
 Read docs/plans/{feature-name}/plan.md
 ```
 
-plan.md が存在しない場合は「先に `/feature-spec:plan` で設計・実装計画を作成してください」と案内して終了する。
+plan.md が存在しない場合は「先に `/plan` で設計・実装計画を作成してください」と案内して終了する。
 
-plan.md の `status` が `planning` の場合は「plan.md がまだ作成中です。先に `/feature-spec:plan` を完了してください」と案内して終了する。
+plan.md の `status` が `planning` の場合は「plan.md がまだ作成中です。先に `/plan` を完了してください」と案内して終了する。
+
+### feature-state.json のガード
+
+Read docs/plans/{feature-name}/feature-state.json
+- plan.status が "done" でなければ「先に /plan を完了してください」と案内して終了。
+- feature-state.json が存在しない場合は、plan.md の frontmatter status で代替判定。
 
 既に `docs/plans/{feature-name}/progress.md` が存在する場合は、その内容を表示し「progress.md を再作成しますか？」と確認する。
 
@@ -157,21 +163,65 @@ plan.md を分析しました。
 
 plan.md の実装タスク表を読み取り、状態列を付与して progress.md に記述する。PR 列・デリバリープランは不要。
 
-テンプレートは [templates/progress-single.md](templates/progress-single.md) を参照。
+```
+Task(subagent_type: strategy-writer):
+  プロンプト: 「progress.md を生成してください。
+  feature-name: {feature-name}
+  plan.md: docs/plans/{feature-name}/plan.md
+  mode: single」
+```
 
 ### 4-b. multi-pr モード（分割あり）の場合
 
 plan.md の実装タスク表を読み取り、PR 列と状態列を付与して progress.md に記述する。
+
+plan.md のタスク表:
+```markdown
+| # | タスク | 対象ファイル | 見積 |
+```
+
+↓ progress.md のタスク進捗テーブル（高リスクタスクがある場合はリスク列を付与）:
+```markdown
+| # | タスク | 対象ファイル | 見積 | PR | リスク | 状態 |
+|---|-------|------------|------|-----|--------|------|
+| 1 | スキーマ定義 | `schema.ts` | S | PR1 | 低 | - |
+| 2 | API実装 | `handler.ts` | M | PR1 | 低 | - |
+| 3 | 既存テーブル変更 | `migration.sql` | S | PR1 | **高** | - |
+| 4 | UI実装 | `Form.tsx` | L | PR2 | 中 | - |
+```
+
+全タスクが低リスクの場合はリスク列を省略してよい。高リスクタスクが1つでもある場合はリスク列を付与する。
+
 デリバリープランセクションも記述する。
 
-テンプレートは [templates/progress-multi-pr.md](templates/progress-multi-pr.md) を参照。
+```
+Task(subagent_type: strategy-writer):
+  プロンプト: 「progress.md を生成してください。
+  feature-name: {feature-name}
+  plan.md: docs/plans/{feature-name}/plan.md
+  mode: multi-pr
+  PR グルーピング:
+    {確定した分割内容をここに記述}」
+```
 
-### 4-d. 完了
+### 4-c. 完了
+
+feature-state.json を更新する:
+
+```
+Task(subagent_type: feature-state-manager, run_in_background: true):
+  プロンプト: 「feature-state.json を更新してください。
+  パス: docs/plans/{feature-name}/feature-state.json
+  更新内容:
+    strategy.status = "done"
+    strategy.references = ["./progress.md"]
+    phase = "strategized"」
+```
 
 ```
 progress.md を作成しました。
 
 次のステップ:
-- 実装に進む場合は `/feature-spec:implement` を使用してください
+- 実装に進む場合は `/implement` を使用してください
 - plan.md を修正したい場合は直接編集してください
 ```

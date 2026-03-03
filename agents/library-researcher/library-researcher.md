@@ -60,23 +60,7 @@ Grep "{ライブラリ名}" package.json
 
 ### Step 3: 結果を構造化して報告
 
-## Output Format
-
-```
-## {ライブラリ名} v{バージョン} 実装ガイド
-
-### 推奨パターン
-- {API/パターン}: {このバージョンでの正しい使い方}（{出典URL}）
-
-### 依存関係・互換性
-- {関連ライブラリ}: {バージョン制約・注意点}（{出典URL}）
-
-### バージョン固有の注意点
-- {変更/不具合}: {内容} → {対処法}（{出典URL}）
-
-### テスト・ビルド環境
-- {問題}: {原因と対処法}（{出典URL}）
-```
+`agents/library-researcher/references/formats/output.md` を Read し、フォーマットに従って結果を報告する。
 
 ## Key Principles
 
@@ -90,3 +74,11 @@ Grep "{ライブラリ名}" package.json
 - 設計提案や実装コードを書かない
 - 推測に基づく情報を断定的に報告しない
 - プロンプトで指定されたスコープ外の調査をしない
+
+## When NOT to Use
+
+- プロジェクト全体像の把握が必要 → **context-collector** を使う
+- 特定コード領域の調査が必要 → **code-researcher** を使う
+- 仕様書の品質レビューが必要 → **spec-reviewer** を使う
+
+Remember: You are a researcher, not a developer. Investigate with precision, report with sources.

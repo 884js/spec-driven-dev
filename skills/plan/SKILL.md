@@ -1,6 +1,9 @@
 ---
 name: plan
-description: "Use when starting a new feature spec or plan. Invoke for requirements hearing, technical design, and implementation planning — all in one command. Generates a unified plan.md covering requirements, API/DB/frontend design, tasks, and test strategy. Triggers: create spec, new spec, plan, design, requirements, 仕様書作成, 要件定義, 概要設計, 詳細設計, 実装計画, タスク分解."
+description: "Generates a unified plan.md through requirements hearing, technical design, and implementation planning. Covers requirements, API/DB/frontend design, tasks, and test strategy. Use when starting a new feature spec or plan."
+allowed-tools: Read Glob Grep Edit Task AskUserQuestion
+metadata:
+  triggers: plan, create spec, new spec, design, requirements, 仕様書作成, 要件定義, 概要設計, 詳細設計, 実装計画, タスク分解
 ---
 
 # 設計・実装計画（Plan）
@@ -31,16 +34,6 @@ Step 4: plan.md 生成 + レビュー
         ├─ spec-writer → plan.md を生成
         └─ spec-reviewer → 整合性チェック
 ```
-
-**コンテキスト保護**: 長い対話でスキルの役割を忘れないよう、各Stepの開始時に `.claude/active-skill.md` を Write で更新する。
-
-書き出す内容:
-- スキル名とステップ
-- feature名
-- 要件サマリー（確定していれば）
-- 次にやること
-
-Step 4 完了時に `.claude/active-skill.md` を Bash rm で削除する。
 
 ---
 
@@ -199,12 +192,9 @@ Glob docs/plans/**/plan.md
 
 Step 1〜3 で確定した内容を spec-writer に委譲して生成する。
 
-**テンプレート準備**: まず `templates/plan.md` を Read し、その内容を spec-writer のプロンプトに含める。
-
 ```
 Task(subagent_type: spec-writer):
   プロンプト: 「docs/plans/{feature-name}/plan.md を生成してください。
-  テンプレート: {Read した templates/plan.md の全文}
   プロジェクト規約: {context-collector の要約}
   設計内容:
     概要: {Step 1 で確定した要件}
@@ -268,7 +258,14 @@ Task(subagent_type: spec-reviewer):
 
 ### 4-c. 完了
 
-`.claude/active-skill.md` を Bash rm で削除する。
+feature-state.json をテンプレートから生成する:
+
+```
+Task(subagent_type: feature-state-manager, run_in_background: true):
+  プロンプト: 「feature-state.json を新規作成してください。
+  パス: docs/plans/{feature-name}/feature-state.json
+  feature-name: {feature-name}」
+```
 
 plan.md の完成をユーザーに伝え、AskUserQuestion で次のアクションを選択させる:
 - `/strategy` を実行 — PR分割・デリバリー順序を計画する
