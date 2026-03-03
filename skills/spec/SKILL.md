@@ -1,7 +1,7 @@
 ---
 name: spec
 description: "Generates or updates plan.md through requirements hearing, integrated analysis, and design dialogue. Handles both new spec creation and update mode (from check results). Includes PR split planning for large features. Use when starting a new feature or updating an existing spec."
-allowed-tools: Read Glob Grep Edit Task AskUserQuestion
+allowed-tools: Read Glob Grep Edit Task
 metadata:
   triggers: spec, plan, create spec, new spec, design, requirements, update spec, 仕様書作成, 要件定義, 仕様更新
 ---
