@@ -1,7 +1,7 @@
 ---
 name: debug
 description: "Investigates root causes of runtime issues by tracing actual execution flows. Prohibits speculative fixes until cause is identified. Operates in feature mode (with plan.md) or standalone mode (without). Use when encountering bugs, errors, or unexpected behavior."
-allowed-tools: Read Glob Grep Write Edit Task Bash AskUserQuestion
+allowed-tools: Read Glob Grep Write Edit Task Bash
 metadata:
   triggers: debug, troubleshoot, 不具合診断, 原因調査, デバッグ, 動かない, 期待と違う, エラー, バグ
 ---

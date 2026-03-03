@@ -1,7 +1,7 @@
 ---
 name: build
 description: "Implements features based on plan.md. Handles feature branch creation, task-by-task coding with dependency order, build verification, and PR creation. Supports pause/resume via progress.md state tracking. Detects spec gaps and prompts for spec update. Use when starting implementation."
-allowed-tools: Read Glob Grep Write Edit Task Bash AskUserQuestion
+allowed-tools: Read Glob Grep Write Edit Task Bash
 metadata:
   triggers: build, implement, 実装開始, コード実装, PR作成, 実装再開
 ---

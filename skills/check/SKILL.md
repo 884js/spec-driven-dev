@@ -1,7 +1,7 @@
 ---
 name: check
 description: "Verifies implementation code matches plan.md specifications. Performs acceptance criteria checks, file structure comparison, and domain-level spec matching. Reports PASS / PARTIAL / NEEDS_FIX. On NEEDS_FIX, guides user back to spec update. Use after /build completion or before PR merge."
-allowed-tools: Read Glob Grep Write Task AskUserQuestion
+allowed-tools: Read Glob Grep Write Task
 metadata:
   triggers: check, verify, validate, 仕様検証, 実装確認, 受入条件チェック
 ---
