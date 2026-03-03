@@ -27,19 +27,36 @@ Step 4: 修正方針の提示 + 調査ドキュメント出力
 
 ## Step 0: コンテキスト判定
 
-- **feature モード**: `docs/plans/{feature-name}/plan.md` が存在する場合。plan.md の仕様と照合しながら調査する
-- **standalone モード**: plan.md がない場合。コードベースのみで調査する
+- **feature モード**: `docs/plans/{feature-name}/plan.md` を参照しながら調査する
+- **standalone モード**: plan.md なし。コードベースのみで調査する
 
 ### 0-a. モード判定
 
-$ARGUMENTS に feature-name が指定されている場合はそのディレクトリを使用。
+$ARGUMENTS に feature-name が指定されている場合はそのディレクトリの plan.md を直接使用し、feature モードで進行する。以下の分岐はスキップ。
+
+指定がない場合、候補を検索する:
 
 ```
 Glob docs/plans/**/plan.md
 ```
 
-- plan.md あり → feature モード
-- plan.md なし → standalone モード
+候補数に応じて分岐:
+
+**0 件**: standalone モードで自動進行（AskUserQuestion 不要）。
+
+**1 件**: AskUserQuestion で確認:
+- `{feature-name} の plan を使って調査する`
+- `plan なしで調査する`
+
+**2-3 件**: AskUserQuestion で選択:
+- 各 plan の `{feature-name} の plan を使う`（候補数分）
+- `plan なしで調査する`
+
+**4 件以上**: AskUserQuestion で確認:
+- `feature 名を入力して指定する`
+- `plan なしで調査する`
+
+`feature 名を入力して指定する` が選ばれた場合、続けて AskUserQuestion で feature 名をテキスト入力させる。
 
 ### 0-b. state.json の参照（feature モードのみ）
 
