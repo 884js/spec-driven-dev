@@ -1,5 +1,5 @@
 #!/bin/bash
-for f in "$CLAUDE_PROJECT_DIR"/docs/plans/*/feature-state.json; do
+for f in "$CLAUDE_PROJECT_DIR"/docs/plans/*/state.json; do
   if [ -f "$f" ]; then
     # 完了済み feature はスキップ
     if grep -q '"phase".*"done"' "$f"; then

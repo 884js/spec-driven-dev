@@ -5,21 +5,22 @@
 ## ワークフロー
 
 ```
-plan → strategy → implement → verify
-                    ↑
-                    |
-               troubleshoot  ← 「動かない」「期待と違う」
+spec → build → check → done
+  ^                |
+  |   (NEEDS_FIX)  |
+  +----------------+
+
+debug は任意タイミングで独立起動（「動かない」「期待と違う」）
 ```
 
 ## スキル一覧
 
 | スキル | 概要 | 前提 |
 |--------|------|------|
-| **plan** | 要件定義・技術設計・実装計画を1コマンドで生成。対話で要件確認 → 技術設計を一括提示 → plan.md 生成 | なし |
-| **strategy** | 実装戦略。plan.md のタスクをPR単位に分割し、progress.md にデリバリープラン・タスク進捗テーブルを生成 | plan 完了 |
-| **implement** | 実装。ブランチ作成、タスク単位のコーディング、テスト、PR作成。中断・再開対応。PR単位実装モード対応 | plan 完了（strategy は任意） |
-| **verify** | 検証。実装コードからデータフロー抽出 → plan.md との双方向乖離検出 | implement 完了 |
-| **troubleshoot** | 不具合調査。実行フローをトレースし根本原因を特定。推測での修正を禁止し、事実に基づく修正方針を立てる | implement 完了後 |
+| **spec** | 要件ヒアリング → 統合分析 → 方向性確認 → plan.md 生成。新規/更新の2モード対応。大規模機能では PR 分割付き progress.md も同時生成 | なし |
+| **build** | plan.md に沿って実装。ブランチ作成、タスク順のコーディング、ビルド確認、PR 作成。中断・再開対応 | spec 完了 |
+| **check** | plan.md と実装コードを突合し PASS / PARTIAL / NEEDS_FIX の3段階で判定。NEEDS_FIX 時は spec への更新を提案 | build 完了 |
+| **debug** | 不具合の根本原因を調査。推測での修正を禁止し、事実に基づく修正方針を立てる。feature / standalone の2モード対応 | build 完了後 |
 
 ## 出力先
 
@@ -27,8 +28,9 @@ plan → strategy → implement → verify
 
 ```
 docs/plans/{feature-name}/
-├── plan.md                      ← plan（設計ドキュメント。plan 完了後は不変）
-├── progress.md                  ← strategy / implement（実装進捗の単一ソース）
-├── result.md                    ← verify（最終仕様書）
-└── troubleshoot-{YYYY-MM-DD}-{N}.md ← troubleshoot（調査レポート）
+├── plan.md          ← spec（設計ドキュメント）
+├── progress.md      ← spec / build（実装進捗の単一ソース）
+├── result.md        ← check（検証結果）
+├── state.json       ← 全スキル（フェーズ遷移管理）
+└── debug-{YYYY-MM-DD}-{N}.md ← debug（調査レポート）
 ```

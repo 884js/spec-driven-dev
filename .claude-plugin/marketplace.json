@@ -7,7 +7,7 @@
     {
       "name": "spec-flow",
       "source": "./",
-      "description": "仕様書を対話的に生成し、実装・検証まで支援する仕様駆動開発プラグイン"
+      "description": "spec ↔ build ↔ check の循環ワークフローで仕様駆動開発を支援するプラグイン"
     }
   ]
 }
