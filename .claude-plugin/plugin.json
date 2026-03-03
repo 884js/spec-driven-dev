@@ -8,14 +8,9 @@
   "repository": "https://github.com/884js/spec-flow",
   "license": "MIT",
   "agents": [
-    "./agents/context-collector/context-collector.md",
-    "./agents/code-researcher/code-researcher.md",
-    "./agents/git-analyzer/git-analyzer.md",
-    "./agents/spec-reviewer/spec-reviewer.md",
-    "./agents/spec-writer/spec-writer.md",
-    "./agents/implementation-verifier/implementation-verifier.md",
-    "./agents/library-researcher/library-researcher.md",
-    "./agents/feature-state-manager/feature-state-manager.md",
-    "./agents/strategy-writer/strategy-writer.md"
+    "./agents/analyzer/analyzer.md",
+    "./agents/writer/writer.md",
+    "./agents/verifier/verifier.md",
+    "./agents/researcher/researcher.md"
   ]
 }

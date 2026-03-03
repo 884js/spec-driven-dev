@@ -19,11 +19,13 @@ description: "プロジェクト全体のスキル・エージェント構造ル
 ## feature-state.json のフェーズ遷移
 
 ```
-planned → strategized → implementing → implemented → done
+spec → build → check → done
 ```
 
-- 各フェーズは順序通りに遷移する。スキップは不可
-- フェーズ更新は `feature-state-manager` エージェントが担当する
+- phase フィールドは現在アクティブなフェーズを示す
+- 各スキルが開始時・完了時に phase を更新する（feature-state-manager は廃止）
+- check の NEEDS_FIX 時は phase を "spec" に戻す（ループ対応）
+- 各フェーズの status は pending / in_progress / done の3値
 
 ## 評価駆動開発
 
