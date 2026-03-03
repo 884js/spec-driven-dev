@@ -16,7 +16,7 @@ description: "プロジェクト全体のスキル・エージェント構造ル
 - スキル側にはテンプレートやフォーマットファイルを置かない
 - スキルからエージェントにパスを渡す際は、エージェントの `references/` パスを指定する
 
-## feature-state.json のフェーズ遷移
+## state.json のフェーズ遷移
 
 ```
 spec → build → check → done

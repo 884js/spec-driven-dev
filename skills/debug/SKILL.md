@@ -41,10 +41,10 @@ Glob docs/plans/**/plan.md
 - plan.md あり → feature モード
 - plan.md なし → standalone モード
 
-### 0-b. feature-state.json の参照（feature モードのみ）
+### 0-b. state.json の参照（feature モードのみ）
 
 ```
-Read docs/plans/{feature-name}/feature-state.json
+Read docs/plans/{feature-name}/state.json
 ```
 
 phase を把握して症状整理の参考にする。
@@ -185,7 +185,7 @@ Step 2 の結果から正確な原因箇所を特定する:
 - {追加したデバッグログのリスト}
 ```
 
-feature-state.json の debug.references に調査レポートパスを追加する。phase は変更しない。
+state.json の debug.references に調査レポートパスを追加する。phase は変更しない。
 
 ### 4-c. standalone モードの場合
 

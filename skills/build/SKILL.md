@@ -57,10 +57,10 @@ Read docs/plans/{feature-name}/plan.md
 
 plan.md が存在しない場合は「先に `/spec` で設計・実装計画を作成してください」と案内して終了。
 
-### feature-state.json のガード
+### state.json のガード
 
 ```
-Read docs/plans/{feature-name}/feature-state.json
+Read docs/plans/{feature-name}/state.json
 ```
 
 spec.status が "done" でなければ「先に `/spec` を完了してください」と案内して終了。
@@ -120,7 +120,7 @@ progress.md のタスク進捗テーブルから集計:
 
 `feature/{feature-name}` 形式。ユーザー確認後に `git checkout -b` で作成する。
 
-feature-state.json を更新: phase を "build"、build.status を "in_progress" に設定する。
+state.json を更新: phase を "build"、build.status を "in_progress" に設定する。
 
 ---
 
@@ -195,4 +195,4 @@ plan.md の「ビルド確認」セクションのコマンドを順に実行。
 6. `git push -u origin feature/{feature-name}` → `gh pr create`
 7. PR URL を提示、progress.md を更新
 
-feature-state.json を更新: build.status を "done"、phase を "check" に設定する。
+state.json を更新: build.status を "done"、phase を "check" に設定する。

@@ -28,7 +28,7 @@ mode: single
 | 6 | build スキル作成 | `skills/build/SKILL.md` | L | - | - | ✓ |
 | 7 | check スキル作成 | `skills/check/SKILL.md` | M | - | - | ✓ |
 | 8 | debug スキル作成 | `skills/debug/SKILL.md` | M | - | - | ✓ |
-| 9 | feature-state.json テンプレート更新 | `agents/writer/references/templates/feature-state.json` | S | - | - | ✓ |
+| 9 | state.json テンプレート更新 | `agents/writer/references/templates/state.json` | S | - | - | ✓ |
 | 10 | plugin.json 更新 | `.claude-plugin/plugin.json` | S | - | - | ✓ |
 | 11 | marketplace.json 更新 | `.claude-plugin/marketplace.json` | S | - | - | ✓ |
 | 12 | hooks 更新 | `hooks/skill-reminder.sh` | S | - | - | ✓ |
