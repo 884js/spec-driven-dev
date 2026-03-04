@@ -169,9 +169,10 @@ Task(subagent_type: analyzer):
 
 plan.md の「ビルド確認」セクションのコマンドを順に実行。エラーがあれば修正 → 再実行。
 
-手動検証チェックリストをユーザーに提示:
+AskUserQuestion で手動検証の結果を確認する:
 - 「問題なし、PR 作成に進む」→ Step 4 へ
 - 「不具合がある」→ 「`/fix` で根本原因を調査できます」と案内
+- 「仕様との整合性を確認したい」→ 「`/check` で plan.md との差分を確認できます」と案内
 
 ---
 
@@ -186,3 +187,4 @@ plan.md の「ビルド確認」セクションのコマンドを順に実行。
 7. PR URL を提示、progress.md を更新
 
 state.json を更新: build.status を "done"、phase を "check" に設定する。
+

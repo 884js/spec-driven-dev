@@ -204,4 +204,5 @@ Task(subagent_type: writer):
 
 AskUserQuestion で次のアクションを選択させる:
 - `/build` を実行 — 実装を開始する
+- plan.md を修正したい — 修正内容をヒアリングして Step 4 を再実行する
 - 何もしない — 後で手動で進める
