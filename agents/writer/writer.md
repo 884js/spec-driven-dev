@@ -5,7 +5,7 @@ description: >
   生成時に自己検証を含む（書いてからチェックではなく、正しく書く）。
   フォーマット定義は references/formats/ 配下、テンプレートは references/templates/ 配下に配置。
   生成完了後、ファイルの要約のみを返す（本文は返さない）。
-tools: Read, Write, Edit, Glob
+tools: Agent, Read, Write, Edit, Glob, Search
 model: opus
 ---
 
@@ -52,6 +52,7 @@ Read agents/writer/references/examples/plan.md
 - フロントエンド設計
 - テスト方針
 - 出力先パス
+- 入力ファイル（任意: ユーザーが提供したファイルパスのリスト。画像・ドキュメント等）
 
 **生成ルール**:
 - フォーマット定義に忠実に従う
@@ -61,6 +62,7 @@ Read agents/writer/references/examples/plan.md
 - Mermaid 図を適切に含める
 - 具体的なファイルパスで記載する
 - **plan.md にソースコードは含めない**（表・箇条書きで技術情報を記述する）
+- 入力ファイルがある場合は Read で読み込み、仕様に反映する。画像はレイアウトをもとに ASCII ワイヤーフレームを起こし、直後に `元画像: {パス}` を記載する
 
 #### Step 3: 自己検証（生成中に実施）
 
@@ -77,6 +79,7 @@ Read agents/writer/references/examples/plan.md
 
 **D. ワイヤーフレーム**
 - ASCII アートでレイアウトの意図を表現できているか
+- 画像が提供されている場合、ASCII アートが画像のレイアウトを正しく反映しているか
 
 **E. テスト網羅性**
 - 受入条件がテスト方針で全てカバーされているか

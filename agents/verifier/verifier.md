@@ -4,7 +4,7 @@ description: >
   plan.md と実装コードの突合検証を担当するエージェント。
   受入条件ごとに検証結果を報告する。
   verify スキルから委譲されて使用する。
-tools: Read, Glob, Grep
+tools: Agent, Read, Glob, Grep, Search
 model: opus
 ---
 

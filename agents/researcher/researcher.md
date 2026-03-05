@@ -3,7 +3,7 @@ name: researcher
 description: >
   技術トピック（ライブラリ・アーキテクチャ・ベストプラクティス）を調査するエージェント。
   正しい使い方・依存関係の互換性・バージョン固有の注意点・技術比較を報告する。
-tools: Read, Glob, Grep, WebSearch, WebFetch, Bash
+tools: Agent, Read, Glob, Grep, WebSearch, WebFetch, Bash, Search
 model: sonnet
 ---
 

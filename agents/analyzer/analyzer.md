@@ -6,7 +6,7 @@ description: >
   一体的に理解し、「プロジェクトの全体像 + この機能に関する洞察」を1つの統合レポートで返す。
   Use PROACTIVELY at the start of spec generation to gather project context and code patterns.
   構造化された要約を返し、メインコンテキストに大量のコードを展開しない。
-tools: Read, Glob, Grep, Bash
+tools: Agent, Read, Glob, Grep, Bash, Search
 model: opus
 ---
 
