@@ -1,7 +1,7 @@
 ---
 name: spec
 description: "Generates or updates plan.md through requirements hearing, integrated analysis, and design dialogue. Handles both new spec creation and update mode (from check results). Includes PR split planning for large features. Use when starting a new feature or updating an existing spec."
-allowed-tools: Read Glob Grep Edit Task
+allowed-tools: Read Glob Grep Edit Task Bash
 metadata:
   triggers: spec, plan, create spec, new spec, design, requirements, update spec, 仕様書作成, 要件定義, 仕様更新
 ---
@@ -213,6 +213,47 @@ Task(subagent_type: writer):
   repositories: {analyzer レポートの「プロジェクト概要」「技術スタック」から抽出}
   docs: {analyzer レポートの「調査ソース > ドキュメント」から抽出}」
 ```
+
+### 4-c. Annotation Cycle（ブラウザレビュー）
+
+plan.md + progress.md 生成後、ブラウザでの詳細レビューを提案する。
+
+AskUserQuestion で選択肢を提示する:
+- 「ブラウザでレビューする」→ 以下のサイクルを開始
+- 「スキップして次へ」→ Step 5 へ
+
+**サイクル（ユーザーが満足するまで繰り返し）**:
+
+1. ローカルサーバーを起動:
+```
+Bash(run_in_background): python3 scripts/annotation-viewer/server.py docs/plans/{feature-name}
+```
+stdout から `PORT:{port}` を取得する。
+
+2. ブラウザを開く:
+```
+Bash: open http://localhost:{port}
+```
+
+3. `TaskOutput(block=true)` でバックグラウンドタスク（サーバー）の停止を待つ。ユーザーがブラウザで「レビュー完了」または「コメントを送信して修正依頼」を押すとサーバーが自動停止する。
+
+4. コメントを確認:
+```
+Read docs/plans/{feature-name}/comments.json
+```
+
+コメントが0件 → レビュー完了。Step 5 へ。
+
+5. コメントが1件以上 → writer にコメントベース修正を委譲:
+```
+Task(subagent_type: writer):
+  プロンプト: 「plan.md をコメントに基づいて修正してください。
+  ドキュメント種別: plan-revision
+  plan.md: docs/plans/{feature-name}/plan.md
+  comments.json: docs/plans/{feature-name}/comments.json」
+```
+
+6. 修正サマリをユーザーに通知し、自動的にステップ1に戻る（サーバー再起動 → ブラウザ再表示）。AskUserQuestion は行わない。コメント0件で送信されるまで自動ループする。
 
 ---
 
