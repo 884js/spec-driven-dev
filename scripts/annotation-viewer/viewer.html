@@ -9,6 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsdiff/8.0.2/diff.min.js"></script>
 <style>
   :root {
     --bg-page:        #f5f9fc;
@@ -320,6 +321,26 @@
   }
   .selection-tooltip:hover { background: var(--accent-hover); }
 
+  /* Diff highlight */
+  .diff-added {
+    background: #d4edda;
+    border-left: 3px solid #28a745;
+    padding-left: 6px;
+    margin-left: -9px;
+  }
+
+  .diff-badge {
+    display: inline-block;
+    background: #28a745;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 10px;
+    vertical-align: middle;
+  }
+
   /* Loading */
   .loading { text-align: center; padding: 48px; color: var(--text-caption); }
 </style>
@@ -367,12 +388,66 @@ async function loadPlan() {
   // Remove disabled from checkboxes (marked.js adds it by default)
   document.querySelectorAll('.content input[type="checkbox"]').forEach(cb => cb.removeAttribute('disabled'));
 
+  // Apply diff highlights if old version is available
+  if (data.old && typeof Diff !== 'undefined') {
+    applyDiffHighlights(data.old, data.content);
+  }
+
   wrapSections();
+}
+
+function applyDiffHighlights(oldText, newText) {
+  // Compute which lines in the new text were added/changed
+  const diff = Diff.diffLines(oldText, newText);
+  const addedLines = new Set();
+  let lineNum = 0;
+  for (const part of diff) {
+    if (part.removed) continue;
+    const lines = part.value.split('\n');
+    // diffLines includes trailing newline in value, so last empty element is not a real line
+    const count = part.value.endsWith('\n') ? lines.length - 1 : lines.length;
+    if (part.added) {
+      for (let i = 0; i < count; i++) {
+        addedLines.add(lineNum + i);
+      }
+    }
+    lineNum += count;
+  }
+
+  if (addedLines.size === 0) return;
+
+  // Map new text lines to rendered DOM elements by matching text content
+  const newLines = newText.split('\n');
+  const content = document.getElementById('content');
+
+  // Walk all block-level elements and check if their source lines are in addedLines
+  const blocks = content.querySelectorAll('p, li, h1, h2, h3, h4, h5, h6, tr, blockquote, pre');
+  for (const block of blocks) {
+    const blockText = block.textContent.trim();
+    if (!blockText) continue;
+
+    // Check if any of this block's source lines are in addedLines
+    const isChanged = newLines.some((line, idx) => {
+      if (!addedLines.has(idx)) return false;
+      const trimmed = line.replace(/^[#\-*>|\s]+/, '').trim();
+      return trimmed.length > 3 && blockText.includes(trimmed);
+    });
+
+    if (isChanged) {
+      block.classList.add('diff-added');
+    }
+  }
+
+  // Show diff badge in header
+  const badge = document.createElement('span');
+  badge.className = 'diff-badge';
+  badge.textContent = `${addedLines.size} lines changed`;
+  document.querySelector('.header-actions').prepend(badge);
 }
 
 function wrapSections() {
   const content = document.getElementById('content');
-  const headings = content.querySelectorAll('h2, h3');
+  const headings = content.querySelectorAll('h1, h2, h3');
 
   headings.forEach(heading => {
     const wrapper = document.createElement('div');
@@ -439,7 +514,7 @@ function openCommentForm(wrapper, sectionHeading, blockText) {
   `;
 
   // Insert after the heading
-  const heading = wrapper.querySelector('h2, h3');
+  const heading = wrapper.querySelector('h1, h2, h3');
   heading.after(form);
   form.querySelector('textarea').focus();
 }
@@ -450,14 +525,9 @@ function addComment(btn, sectionHeading, selectedText) {
   const text = textarea.value.trim();
   if (!text) return;
 
-  const comment = { sectionHeading: `## ${sectionHeading}`, selectedText: selectedText || undefined, comment: text };
-  if (sectionHeading.startsWith('###') || form.closest('.section-wrapper').querySelector('h3')) {
-    // Detect if this is an h3 section
-    const heading = form.closest('.section-wrapper').querySelector('h2, h3');
-    if (heading && heading.tagName === 'H3') {
-      comment.sectionHeading = `### ${sectionHeading}`;
-    }
-  }
+  const heading = form.closest('.section-wrapper').querySelector('h1, h2, h3');
+  const prefix = heading ? '#'.repeat(parseInt(heading.tagName[1])) + ' ' : '## ';
+  const comment = { sectionHeading: `${prefix}${sectionHeading}`, selectedText: selectedText || undefined, comment: text };
 
   comments.push(comment);
 
@@ -542,7 +612,7 @@ document.addEventListener('mouseup', () => {
   tooltip.style.top = `${rect.top + window.scrollY - 32}px`;
 
   tooltip.onclick = () => {
-    const heading = wrapper.querySelector('h2, h3');
+    const heading = wrapper.querySelector('h1, h2, h3');
     if (heading) openCommentForm(wrapper, heading.textContent);
     tooltip.style.display = 'none';
   };

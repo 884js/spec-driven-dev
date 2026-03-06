@@ -55,7 +55,9 @@ class AnnotationHandler(http.server.SimpleHTTPRequestHandler):
             self.send_error(404, "plan.md not found")
             return
         content = plan_path.read_text(encoding="utf-8")
-        body = json.dumps({"content": content}).encode("utf-8")
+        bak_path = Path(self.plan_dir) / "plan.md.bak"
+        old = bak_path.read_text(encoding="utf-8") if bak_path.exists() else None
+        body = json.dumps({"content": content, "old": old}).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))

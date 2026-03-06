@@ -244,7 +244,10 @@ Read docs/plans/{feature-name}/comments.json
 
 コメントが0件 → レビュー完了。Step 5 へ。
 
-5. コメントが1件以上 → writer にコメントベース修正を委譲:
+5. コメントが1件以上 → 修正前の plan.md をバックアップしてから writer に委譲:
+```
+Bash: cp docs/plans/{feature-name}/plan.md docs/plans/{feature-name}/plan.md.bak
+```
 ```
 Task(subagent_type: writer):
   プロンプト: 「plan.md をコメントに基づいて修正してください。
@@ -253,7 +256,7 @@ Task(subagent_type: writer):
   comments.json: docs/plans/{feature-name}/comments.json」
 ```
 
-6. 修正サマリをユーザーに通知し、自動的にステップ1に戻る（サーバー再起動 → ブラウザ再表示）。AskUserQuestion は行わない。コメント0件で送信されるまで自動ループする。
+6. 修正サマリをユーザーに通知し、自動的にステップ1に戻る（サーバー再起動 → ブラウザ再表示）。次回のレビューでは変更箇所がハイライト表示される。AskUserQuestion は行わない。コメント0件で送信されるまで自動ループする。
 
 ---
 
