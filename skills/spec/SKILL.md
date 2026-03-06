@@ -253,7 +253,9 @@ Task(subagent_type: writer):
   プロンプト: 「plan.md をコメントに基づいて修正してください。
   ドキュメント種別: plan-revision
   plan.md: docs/plans/{feature-name}/plan.md
-  comments.json: docs/plans/{feature-name}/comments.json」
+  progress.md: docs/plans/{feature-name}/progress.md
+  comments.json: docs/plans/{feature-name}/comments.json
+  注意: plan.md の実装タスクを変更した場合（追加・削除・変更）は、progress.md のタスク進捗テーブルも同期すること。新規タスクは状態 `-` で追加する。」
 ```
 
 6. 修正サマリをユーザーに通知し、自動的にステップ1に戻る（サーバー再起動 → ブラウザ再表示）。次回のレビューでは変更箇所がハイライト表示される。AskUserQuestion は行わない。コメント0件で送信されるまで自動ループする。
