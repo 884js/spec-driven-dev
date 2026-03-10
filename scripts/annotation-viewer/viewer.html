@@ -413,8 +413,12 @@ function applyDiffHighlights(oldText, newText) {
     // Check if any of this block's source lines are in addedLines
     const isChanged = newLines.some((line, idx) => {
       if (!addedLines.has(idx)) return false;
-      const trimmed = line.replace(/^[#\-*>|\s]+/, '').trim();
-      return trimmed.length > 3 && blockText.includes(trimmed);
+      // Strip markdown syntax: headings, list markers, blockquote, table pipes
+      const trimmed = line.replace(/^[#\-*>|\s]+/, '').replace(/\|/g, ' ').replace(/\s+/g, ' ').trim();
+      if (trimmed.length <= 3) return false;
+      // Also normalize block text for comparison
+      const normalizedBlock = blockText.replace(/\s+/g, ' ');
+      return normalizedBlock.includes(trimmed) || trimmed.split(/\s+/).filter(w => w.length > 3).every(w => normalizedBlock.includes(w));
     });
 
     if (isChanged) {
