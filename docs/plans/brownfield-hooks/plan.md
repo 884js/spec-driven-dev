@@ -90,13 +90,13 @@ sequenceDiagram
     Hook->>Hook: stdin から書き込み先パスを取得
     Hook->>File: 対象ファイルを読み込み
     alt progress.md で全タスク完了
-        Hook-->>Claude: 「全タスク完了。/check で検証できます。」
+        Hook-->>Claude: additionalContext JSON「全タスク完了。/check で検証できます。」
     else result.md で NEEDS_FIX
-        Hook-->>Claude: 「不一致あり。/spec で仕様更新できます。」
+        Hook-->>Claude: additionalContext JSON「不一致あり。/spec で仕様更新できます。」
     else result.md で PASS
-        Hook-->>Claude: 「検証完了。PRマージに進めます。」
+        Hook-->>Claude: additionalContext JSON「検証完了。PRマージに進めます。」
     else 対象外ファイル
-        Hook-->>Claude: （出力なし）
+        Hook-->>Claude: exit 0（出力なし）
     end
 
     Note over Claude,Hook: UserPromptSubmit 発火
@@ -115,6 +115,7 @@ sequenceDiagram
 | phase-detector の分離 | phase-detector.sh に統合（skill-tracker.sh を廃止） | どちらも spec-flow のワークフロー状態を Claude に注入する同一目的。1ファイルに統合して保守性を向上 | 別ファイルのまま維持 — 同一目的のフックが分散し保守コスト増 |
 | フェーズ検知の方式 | ファイル読み込み方式 | tool_input にはファイル内容が含まれないため、対象ファイルを直接読む必要がある | tool_input パース — Edit の場合は差分しか見えない |
 | hook イベント | PostToolUse | ファイル書き込み完了後に検知する必要がある | PreToolUse — 書き込み前なのでファイル内容が古い |
+| PostToolUse の出力方式 | additionalContext JSON | PostToolUse の stdout はデフォルトで Claude に見えない。JSON 形式で additionalContext を返す必要がある | プレーンテキスト stdout — Claude のコンテキストに注入されない |
 | Living document 不採用 | 導入しない | spec-flow は「仕様→実装」の一方向。コード変更で仕様を自動更新すると仕様の権威性が崩れる | Kiro 方式の自動更新 — 思想と矛盾 |
 
 ## システム影響
