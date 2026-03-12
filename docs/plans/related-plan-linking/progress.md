@@ -41,7 +41,7 @@ docs:
 
 | PR | ブランチ | PR URL | 状態 |
 |----|---------|--------|------|
-| - | - | - | - |
+| #11 | feature/related-plan-linking | https://github.com/884js/spec-flow/pull/11 | open |
 
 ## 作業ログ
 
