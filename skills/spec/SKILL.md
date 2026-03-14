@@ -223,32 +223,41 @@ AskUserQuestion で選択肢を提示する:
 - 「ブラウザでレビューする」→ 以下のサイクルを開始
 - 「スキップして次へ」→ Step 4 へ
 
-**サイクル（イベントベースループ）**:
+**サイクル（ファイルポーリングループ）**:
 
 1. サーバーの起動（ロックファイルチェック付き）:
 ```
 Bash: cat /tmp/annotation-viewer.lock 2>/dev/null
 ```
 
-- ロックファイルが存在し、そのポートでサーバーが応答する場合 → サーバー起動をスキップ、ポート番号を記録
+- ロックファイルが存在し、そのポートでサーバーが応答する場合:
+  - サーバー起動をスキップ、ポート番号を記録
+  - プラン登録のみ行う:
+  ```
+  Bash: python3 ${CLAUDE_PLUGIN_ROOT}/scripts/annotation-viewer/server.py docs/plans/{feature-name}
+  ```
+  stdout から `PORT:{port}` を取得する（プロセスは登録後に自動終了する）。
+
 - それ以外 → サーバーを新規起動:
 ```
 Bash(run_in_background): python3 ${CLAUDE_PLUGIN_ROOT}/scripts/annotation-viewer/server.py docs/plans/{feature-name}
 ```
 stdout から `PORT:{port}` を取得する。
 
-- サーバーが既に起動中だった場合はプラン登録のみ行う（server.py が自動的に `EVENT:registered:{feature-name}` を出力して終了する）
-
 2. ブラウザを開く:
 ```
 Bash: open http://localhost:{port}
 ```
 
-3. イベントループ: `TaskOutput(block=true)` でサーバーの stdout イベントを待つ。
+3. ファイルポーリングループ: `docs/plans/{feature-name}/` 内のファイルを2秒間隔で監視する。
 
-イベントの種類に応じて処理を分岐:
+```
+Bash: while true; do if [ -f "docs/plans/{feature-name}/review-done.flag" ]; then echo "REVIEW_DONE"; break; elif [ -f "docs/plans/{feature-name}/comments.json" ]; then echo "COMMENTS_FOUND"; break; fi; sleep 2; done
+```
 
-- **`EVENT:comments_saved:{feature-name}`** → コメントが保存された:
+結果に応じて処理を分岐:
+
+- **`COMMENTS_FOUND`** → コメントが保存された:
   1. comments.json を読み込む:
   ```
   Read docs/plans/{feature-name}/comments.json
@@ -272,12 +281,12 @@ Bash: open http://localhost:{port}
   Bash: rm -f docs/plans/{feature-name}/comments.json
   ```
   5. 修正サマリをユーザーに通知。ブラウザは自動的にポーリングで差分ハイライト付きリロードされる。
-  6. イベントループに戻る（ステップ3）。
+  6. ファイルポーリングループに戻る（ステップ3）。
 
-- **`EVENT:review_done:{feature-name}`** → レビュー完了:
+- **`REVIEW_DONE`** → レビュー完了:
   1. 一時ファイルをクリーンアップ:
   ```
-  Bash: rm -f docs/plans/{feature-name}/comments.json docs/plans/{feature-name}/plan.md.bak
+  Bash: rm -f docs/plans/{feature-name}/comments.json docs/plans/{feature-name}/plan.md.bak docs/plans/{feature-name}/review-done.flag
   ```
   2. Step 4 へ進む。
 

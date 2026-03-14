@@ -173,6 +173,12 @@ class AnnotationHandler(http.server.SimpleHTTPRequestHandler):
         print(f"EVENT:comments_saved:{feature}", flush=True)
 
     def _finish_review(self, feature):
+        with registry_lock:
+            plan_dir = plan_registry.get(feature)
+        # Write review-done flag file for CLI polling
+        if plan_dir:
+            flag_path = Path(plan_dir) / "review-done.flag"
+            flag_path.write_text("done", encoding="utf-8")
         self._send_json({"status": "ok"})
         print(f"EVENT:review_done:{feature}", flush=True)
         with registry_lock:
