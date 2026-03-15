@@ -28,12 +28,12 @@ PR1（DB 基盤 + db.sh コア実装）のタスク #1 から着手する。`mig
 
 | # | タスク | 対象ファイル | 見積 | PR | リスク | 状態 |
 |---|-------|------------|------|-----|--------|------|
-| 1 | DB スキーマ設計 + マイグレーション基盤 | `migrations/0001_initial_schema.sql`, `scripts/db.sh` | M | PR1 | 低 | - |
-| 2 | db.sh コア実装（plan CRUD + body 操作） | `scripts/db.sh` | L | PR1 | 中 | - |
+| 1 | DB スキーマ設計 + マイグレーション基盤（projects テーブル含む） | `migrations/0001_initial_schema.sql`, `scripts/db.sh` | M | PR1 | 低 | - |
+| 2 | db.sh コア実装（プロジェクト管理 + plan CRUD + body 操作） | `scripts/db.sh` | L | PR1 | 中 | - |
 | 3 | db.sh タスク操作 | `scripts/db.sh` | M | PR1 | 低 | - |
 | 4 | db.sh 結果・リサーチ・デバッグ操作 | `scripts/db.sh` | M | PR1 | 低 | - |
 | 5 | db.sh リレーション操作 | `scripts/db.sh` | S | PR1 | 低 | - |
-| 6 | db.sh export-plan | `scripts/db.sh` | M | PR1 | 低 | - |
+| 20 | db.sh progress 操作（update-progress, get-progress） | `scripts/db.sh` | M | PR1 | 低 | - |
 | 7 | 既存 md -> DB マイグレーションスクリプト | `scripts/migrate-md-to-db.sh` | L | PR2 | 高 | - |
 | 8 | /list スキル書き換え | `skills/list/SKILL.md` | M | PR3 | 中 | - |
 | 9 | /spec スキル書き換え | `skills/spec/SKILL.md` | M | PR3 | 中 | - |
@@ -45,7 +45,7 @@ PR1（DB 基盤 + db.sh コア実装）のタスク #1 から着手する。`mig
 | 15 | verifier エージェント書き換え | `agents/verifier/verifier.md` | S | PR4 | 低 | - |
 | 16 | analyzer エージェント書き換え | `agents/analyzer/analyzer.md` | S | PR4 | 低 | - |
 | 17 | Annotation Viewer DB 対応 | `scripts/annotation-viewer/server.py` | M | PR5 | 中 | - |
-| 18 | .gitignore + ルール更新 | `.gitignore`, `.claude/rules/plugin-structure.md` | S | PR5 | 低 | - |
+| 18 | ルール更新 | `.claude/rules/plugin-structure.md` | S | PR5 | 低 | - |
 | 19 | 既存 19 プランのマイグレーション実行 + 動作確認 | - | M | PR5 | 高 | - |
 
 > タスク定義の詳細は [plan.md](./plan.md) を参照
@@ -56,7 +56,7 @@ PR1（DB 基盤 + db.sh コア実装）のタスク #1 から着手する。`mig
 
 | PR | タスク | 概要 | 依存 |
 |----|--------|------|------|
-| PR1 | #1-#6 | DB 基盤 + db.sh コア実装 | - |
+| PR1 | #1-#5, #20 | DB 基盤 + db.sh コア実装（プロジェクト管理 + progress 操作含む） | - |
 | PR2 | #7 | マイグレーションスクリプト + 既存データ移行 | PR1 |
 | PR3 | #8-#13 | 全スキル書き換え | PR1 |
 | PR4 | #14-#16 | エージェント書き換え | PR1 |
