@@ -436,10 +436,10 @@ let tabs = []; // [{feature, planDir, title}]
 let activeFeature = null;
 // Per-tab comments: {feature: [{sectionHeading, selectedText, comment}]}
 const tabComments = {};
-// Per-tab EventSource connections: {feature: EventSource}
-const featureEventSources = {};
-// Debounce timer for plan_list_updated (all SSE connections fire the same event)
-let refreshTabsTimer = null;
+// Per-tab polling state: {feature: {intervalId, lastModified}}
+const featurePollers = {};
+// Polling interval for plan list changes
+let planListPollerId = null;
 
 // --- Init ---
 async function init() {
@@ -447,6 +447,9 @@ async function init() {
   mermaid.initialize({ startOnLoad: false, theme: isDark ? 'dark' : 'default' });
 
   await refreshTabs();
+
+  // Poll for plan list changes (new plans registered / plans finished)
+  planListPollerId = setInterval(refreshTabs, 3000);
 }
 
 async function refreshTabs() {
@@ -460,13 +463,13 @@ async function refreshTabs() {
 
   tabs = newTabs;
 
-  // Initialize comment arrays and SSE connections for new tabs
+  // Initialize comment arrays and pollers for new tabs
   for (const tab of tabs) {
     if (!tabComments[tab.feature]) {
       tabComments[tab.feature] = [];
     }
-    if (!featureEventSources[tab.feature]) {
-      connectSSE(tab.feature);
+    if (!featurePollers[tab.feature]) {
+      startPlanPoller(tab.feature);
     }
   }
 
@@ -474,9 +477,9 @@ async function refreshTabs() {
   for (const f of oldFeatures) {
     if (!newFeatures.has(f)) {
       delete tabComments[f];
-      if (featureEventSources[f]) {
-        featureEventSources[f].close();
-        delete featureEventSources[f];
+      if (featurePollers[f]) {
+        clearInterval(featurePollers[f].intervalId);
+        delete featurePollers[f];
       }
     }
   }
@@ -841,9 +844,9 @@ async function finishReview() {
 
   // Remove this tab
   delete tabComments[activeFeature];
-  if (featureEventSources[activeFeature]) {
-    featureEventSources[activeFeature].close();
-    delete featureEventSources[activeFeature];
+  if (featurePollers[activeFeature]) {
+    clearInterval(featurePollers[activeFeature].intervalId);
+    delete featurePollers[activeFeature];
   }
 
   const removedFeature = activeFeature;
@@ -863,26 +866,27 @@ async function finishReview() {
   }
 }
 
-function connectSSE(feature) {
-  const es = new EventSource(`/api/plans/${feature}/events`);
-  featureEventSources[feature] = es;
+function startPlanPoller(feature) {
+  const state = { intervalId: null, lastModified: null };
 
-  es.addEventListener('plan_updated', async () => {
-    if (feature === activeFeature) {
-      await loadPlan(feature);
-      updateCount();
+  state.intervalId = setInterval(async () => {
+    try {
+      const res = await fetch(`/api/plans/${feature}/status`);
+      if (!res.ok) return;
+      const data = await res.json();
+      if (state.lastModified !== null && data.lastModified > state.lastModified) {
+        if (feature === activeFeature) {
+          await loadPlan(feature);
+          updateCount();
+        }
+      }
+      state.lastModified = data.lastModified;
+    } catch (e) {
+      // Server may be down; ignore
     }
-  });
+  }, 3000);
 
-  es.addEventListener('plan_list_updated', () => {
-    // Debounce: all SSE connections receive this event, so coalesce into one refresh
-    clearTimeout(refreshTabsTimer);
-    refreshTabsTimer = setTimeout(() => refreshTabs(), 100);
-  });
-
-  es.onerror = () => {
-    // EventSource auto-reconnects; no action needed
-  };
+  featurePollers[feature] = state;
 }
 
 // Selection-based comment tooltip
