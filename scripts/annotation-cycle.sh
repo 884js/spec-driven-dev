@@ -75,7 +75,7 @@ ensure_server() {
             # Server is running, register plan
             curl -s -X POST "http://127.0.0.1:${PORT}/api/plans/register" \
                 -H "Content-Type: application/json" \
-                -d "{\"feature\": \"${FEATURE}\"}" >/dev/null 2>&1 || true
+                -d "{\"feature\": \"${FEATURE}\", \"project\": \"$(basename "$(pwd)")\"}" >/dev/null 2>&1 || true
             echo "$PORT"
             return
         fi

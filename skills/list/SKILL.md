@@ -27,7 +27,7 @@ Bash "${CLAUDE_PLUGIN_ROOT}/scripts/db.sh list-plans"
 
 0件なら「プランが見つかりません。`/spec` で新規作成してください。」と案内して終了。
 
-出力は TSV 形式（feature_name, title, status）。番号付きリストでステータスと共に表示する。
+出力は TSV 形式（feature_name, title, status）。未着手のプランを先頭にソートし、番号付きリストでステータスと共に表示する。
 
 ---
 

@@ -21,8 +21,8 @@ metadata:
 Step 1: モード判定 + 要件ヒアリング
 Step 2: 統合分析（analyzer）
 Step 3: plan + progress 生成（writer）
-Step 4: plan 完全性検証
-Step 5: ブラウザレビュー（Annotation Cycle）
+Step 4: ブラウザレビュー（Annotation Cycle）
+Step 5: plan 完全性検証
 Step 6: 次のアクション提示
 ```
 
@@ -98,33 +98,50 @@ Task(subagent_type: writer):
 
 ---
 
-## Step 4: plan 完全性検証
-
-plan 生成後、対象ファイルの変更が他ファイルに波及していないかをコードベースを検索して検証する。
-
-1. `db.sh get-body` で生成された plan 本文を取得
-2. plan の実装タスク一覧から「対象ファイル」を全て抽出
-3. 各対象ファイルのファイル名を Grep でコードベース内検索し、参照元を特定
-4. 参照元がタスクの対象ファイルに含まれていなければ **漏れ** として検出
-5. 漏れがあれば writer（plan-revision）で plan に追加（タスク・対象ファイル・システム影響の参照更新箇所を更新）
-6. 漏れがなければそのまま Step 5 へ
-
----
-
-## Step 5: Annotation Cycle（ブラウザレビュー）
+## Step 4: Annotation Cycle（ブラウザレビュー）
 
 plan 生成後、ブラウザでのレビューを提案する。
 
 AskUserQuestion:
 - 「ブラウザでレビューする」→ 以下のサイクルを開始
-- 「スキップして次へ」→ Step 6 へ
+- 「スキップして次へ」→ Step 5 へ
 
 ### サイクル
 
 1. **初回起動**: `Bash "${CLAUDE_PLUGIN_ROOT}/scripts/annotation-cycle.sh --feature {feature-name}"`
 2. **結果に応じて分岐**:
    - **`COMMENTS_SAVED`** → `db.sh get-comments --feature {feature-name}` でコメント取得 → plan 本文を `db.sh get-body` で取得し `.bak` として保存 → writer（plan-revision）で plan 本文を修正 → `db.sh clear-comments --feature {feature-name}` でクリア → `Bash "${CLAUDE_PLUGIN_ROOT}/scripts/annotation-cycle.sh --feature {feature-name} --wait-only"` で再待機
-   - **`REVIEW_DONE`** → Step 6 へ
+   - **`REVIEW_DONE`** → Step 5 へ
+
+---
+
+## Step 5: plan 完全性検証
+
+`db.sh get-body` で plan 本文を取得し、以下の3つの Agent を**並列**で起動する。各 Agent には plan 本文全体を渡す。
+
+```
+Agent("実装者視点で plan を検証。タスクを上から順に実装するシミュレーションを行い、plan だけでは完遂できない箇所を検出せよ。コードベースを実際に読んで確認すること。\n\n{plan本文}")
+
+Agent("テスター視点で plan を検証。各受入条件がテスト可能か、境界条件・エラーパスが定義されているか検証せよ。コードベースを実際に読んで確認すること。\n\n{plan本文}")
+
+Agent("失敗条件の逆算で plan を検証。各タスクが失敗するとしたら何が原因かを列挙し、plan で未対処のものを検出せよ。コードベースを実際に読んで確認すること。\n\n{plan本文}")
+```
+
+3つの結果を集約し:
+- 漏れがあれば writer（plan-revision）で plan を修正
+
+修正の有無にかかわらず、検証サマリをユーザーに提示してから Step 6 へ進む。
+
+検証サマリのフォーマット:
+```
+## 完全性検証サマリ
+
+| 視点 | 検出事項 | plan 修正内容 |
+|------|----------|--------------|
+| 実装者 | なし / {検出内容} | - / {修正内容} |
+| テスター | なし / {検出内容} | - / {修正内容} |
+| 失敗条件 | なし / {検出内容} | - / {修正内容} |
+```
 
 ---
 
