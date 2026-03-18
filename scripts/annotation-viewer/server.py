@@ -103,7 +103,6 @@ registry_lock = threading.Lock()
 class AnnotationHandler(http.server.SimpleHTTPRequestHandler):
 
     def do_GET(self):
-        reset_timeout()
         if self.path == "/":
             self._serve_viewer()
         elif self.path == "/api/plans":
@@ -168,10 +167,6 @@ class AnnotationHandler(http.server.SimpleHTTPRequestHandler):
             conn.close()
 
     def _serve_plan(self, feature):
-        with registry_lock:
-            if feature not in plan_registry:
-                self.send_error(404, f"Plan '{feature}' not registered")
-                return
         conn = get_db()
         try:
             project_id = resolve_project_id(conn)
@@ -191,10 +186,6 @@ class AnnotationHandler(http.server.SimpleHTTPRequestHandler):
             conn.close()
 
     def _serve_plan_status(self, feature):
-        with registry_lock:
-            if feature not in plan_registry:
-                self.send_error(404, f"Plan '{feature}' not registered")
-                return
         conn = get_db()
         try:
             project_id = resolve_project_id(conn)
@@ -227,17 +218,32 @@ class AnnotationHandler(http.server.SimpleHTTPRequestHandler):
             threading.Thread(target=self.server.shutdown, daemon=True).start()
 
     def _save_comments(self, feature):
-        with registry_lock:
-            if feature not in plan_registry:
-                self.send_error(404, f"Plan '{feature}' not registered")
-                return
         data = self._read_body()
-        # Write comments to signal dir for CLI polling
+        conn = get_db()
+        try:
+            project_id = resolve_project_id(conn)
+            row = conn.execute(
+                "SELECT id FROM plans WHERE feature_name = ? AND project_id = ?",
+                (feature, project_id),
+            ).fetchone()
+            if not row:
+                self.send_error(404, f"Plan '{feature}' not found in DB")
+                return
+            plan_id = row["id"]
+            # Clear existing comments and insert new ones
+            conn.execute("DELETE FROM comments WHERE plan_id = ?", (plan_id,))
+            for c in data.get("comments", []):
+                conn.execute(
+                    "INSERT INTO comments (plan_id, section_heading, selected_text, comment) VALUES (?, ?, ?, ?)",
+                    (plan_id, c.get("sectionHeading"), c.get("selectedText"), c["comment"]),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+        # Write signal file for CLI polling detection
         signal_path = Path(SIGNAL_DIR) / feature
         signal_path.mkdir(parents=True, exist_ok=True)
-        comments_path = signal_path / "comments.json"
-        with open(comments_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        (signal_path / "comments.json").write_text('{"saved": true}', encoding="utf-8")
         self._send_json({"status": "ok"})
         print(f"EVENT:comments_saved:{feature}", flush=True)
 

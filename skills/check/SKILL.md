@@ -1,52 +1,83 @@
 ---
 name: check
-description: "Verifies implementation code matches plan specifications. Reports PASS / PARTIAL / NEEDS_FIX. On NEEDS_FIX, guides user back to spec update or build fix. Use after /build completion or before PR merge."
+description: "Verifies plan-code alignment. Pre-build: checks if plan assumptions still hold against current codebase (GO / UPDATE_NEEDED / BLOCKED). Post-build: verifies implementation matches spec (PASS / PARTIAL / NEEDS_FIX). Use after selecting a plan or after build completion."
 allowed-tools: Read Glob Grep Write Task Bash
 metadata:
-  triggers: check, verify, validate, 仕様検証, 実装確認, 受入条件チェック
+  triggers: check, verify, validate, preflight, 仕様検証, 実装確認, 受入条件チェック, 実現性確認
 ---
 
-# 仕様検証（Check）
+# プラン検証（Check）
 
-plan と実装コードの突合検証を行い、PASS / PARTIAL / NEEDS_FIX で判定する。
+プランとコードの整合性を検証する。タスク状態で自動的にモードを切り替える。
 
-入力: DB 上の plan レコード + 実装コード
-出力: DB 上の result レコード
+- **Pre-build**（全タスク pending）: プランの前提が現在のコードで成り立つか検証
+- **Post-build**（タスク進行中/完了）: 実装が仕様通りか突合検証
+
+入力: DB 上の plan レコード + コードベース
+出力: Pre-build は判定のみ。Post-build は DB 上の result レコード
 
 **feature-name**: 英語の kebab-case
-
-## 重要度レベル
-
-| レベル | 基準 |
-|--------|------|
-| **Critical** | 主要機能が未実装、または根本的に異なる |
-| **Warning** | 部分的な不一致。動作はするが仕様通りではない |
-| **Info** | 軽微な差異。仕様の意図は満たしている |
 
 ## ワークフロー
 
 ```
-Step 0: 読み込み + 変更範囲の特定
-Step 1: verifier で突合検証
-Step 2: 最終判定 + result 生成
-Step 3: 次のアクション
+Step 0: 読み込み + モード判定
+  ├─ 全タスク pending → Pre-build フロー（Step P1〜P2）
+  └─ それ以外 → Post-build フロー（Step 1〜3）
 ```
 
 ---
 
-## Step 0: 読み込み + 変更範囲の特定
+## Step 0: 読み込み + モード判定
 
 ```
 Bash "${CLAUDE_PLUGIN_ROOT}/scripts/db.sh get-body --feature {feature-name}"
 Bash "${CLAUDE_PLUGIN_ROOT}/scripts/db.sh list-tasks --feature {feature-name}"
-Bash: git diff {base-branch} --name-only
 ```
 
-全タスク `pending` なら「実装が開始されていません」と案内して終了。
+全タスク `pending` → **Pre-build フロー**へ。それ以外 → **Post-build フロー**（Step 1）へ。
 
 ---
 
-## Step 1: verifier で突合検証
+## Pre-build フロー
+
+### Step P1: コードベースとの乖離分析
+
+plan の `updated_at` 以降のコード変更を確認し、プランの前提が崩れていないか検証する:
+
+```
+Task(subagent_type: analyzer):
+  「このプランの実現性を検証してください。
+  DB スクリプト: ${CLAUDE_PLUGIN_ROOT}/scripts/db.sh
+  feature-name: {feature-name}
+  検証観点:
+  - プランが触る予定のファイル・関数・APIに、プラン作成後の変更が入っていないか
+  - プランが依存するライブラリ・スキーマ・型定義が現在も存在し互換性があるか
+  - プランの設計方針と矛盾する変更が他で入っていないか
+  - プランの設計アプローチ自体が現在のコードベースに対して妥当か（新たに確立されたパターンや追加された機能との整合性）」
+```
+
+### Step P2: 判定 + 次のアクション
+
+| 判定 | 基準 |
+|------|------|
+| **GO** | 前提に影響する変更なし。そのまま build 可能 |
+| **UPDATE_NEEDED** | 前提の一部が変化。プラン修正を推奨 |
+| **BLOCKED** | 前提が根本的に崩れている。プラン再設計が必要 |
+
+- **GO**: 「プランは現在のコードと整合しています。`/build` で実装を開始できます。」
+- **UPDATE_NEEDED**: 乖離箇所を列挙し、AskUserQuestion で `/spec`（プラン更新）か `/build`（そのまま進行）かを選択させる
+- **BLOCKED**: 乖離箇所を列挙し、`/spec` でのプラン再設計を案内する
+
+---
+
+## Post-build フロー
+
+### Step 1: verifier で突合検証
+
+```
+Bash: git diff {base-branch} --name-only
+```
 
 verifier に仕様・実装・受入条件の突合を一括で依頼する:
 
@@ -65,7 +96,7 @@ Task(subagent_type: verifier):
 
 ---
 
-## Step 2: 最終判定 + result 生成
+### Step 2: 最終判定 + result 生成
 
 | 判定 | 基準 |
 |------|------|
@@ -85,7 +116,7 @@ Task(subagent_type: writer):
 
 ---
 
-## Step 3: 次のアクション
+### Step 3: 次のアクション
 
 - **PASS**: 「検証完了。PR のマージに進めます。」
 - **PARTIAL**: 不一致一覧を提示し、実装修正か仕様修正かを選択させる

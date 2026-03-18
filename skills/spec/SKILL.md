@@ -121,11 +121,10 @@ AskUserQuestion:
 
 ### サイクル
 
-1. **サーバー起動**: `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/annotation-viewer/server.py --feature {feature-name}` を実行。stdout の `PORT:{port}` からポート取得
-2. **ブラウザを開く**: `open http://localhost:{port}`
-3. **ファイルポーリングで待機**: 3秒間隔で `/tmp/spec-flow-review/{feature-name}/` をチェック:
-   - **`comments.json` が出現** → plan 本文を `db.sh get-body` で取得し `.bak` として保存 → コメントを読み込み、writer（plan-revision）で plan 本文を修正 → comments.json を削除 → 待機に戻る
-   - **`review-done.flag` が出現** → Step 6 へ
+1. **初回起動**: `Bash "${CLAUDE_PLUGIN_ROOT}/scripts/annotation-cycle.sh --feature {feature-name}"`
+2. **結果に応じて分岐**:
+   - **`COMMENTS_SAVED`** → `db.sh get-comments --feature {feature-name}` でコメント取得 → plan 本文を `db.sh get-body` で取得し `.bak` として保存 → writer（plan-revision）で plan 本文を修正 → `db.sh clear-comments --feature {feature-name}` でクリア → `Bash "${CLAUDE_PLUGIN_ROOT}/scripts/annotation-cycle.sh --feature {feature-name} --wait-only"` で再待機
+   - **`REVIEW_DONE`** → Step 6 へ
 
 ---
 
