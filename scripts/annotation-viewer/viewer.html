@@ -70,36 +70,23 @@
     background: var(--bg-page);
   }
 
-  .header {
-    background: var(--bg-page);
-    padding: 14px 24px 0;
+  .header-actions { display: flex; gap: 10px; align-items: center; padding-right: 12px; }
+
+  .tab-bar-row {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    position: sticky;
-    top: 0;
-    z-index: 100;
+    align-items: stretch;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-page);
   }
-
-  .header h1 {
-    font-size: 15px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-  }
-
-  .header-actions { display: flex; gap: 10px; align-items: center; }
 
   /* Tab bar */
   .tab-bar {
+    flex: 1;
     background: var(--bg-page);
-    border-bottom: 1px solid var(--border);
     padding: 0 24px;
     display: flex;
     gap: 2px;
     overflow-x: auto;
-    position: sticky;
-    top: 0;
-    z-index: 99;
   }
 
   .tab-bar:empty { display: none; }
@@ -166,16 +153,167 @@
   .btn-finish:hover { background: var(--text-caption); color: var(--bg-page); }
 
   .container {
-    max-width: 1200px;
-    margin: 0 auto;
+    max-width: none;
+    margin: 0;
     padding: 32px 24px;
+    display: flex;
+    flex-direction: row;
+    gap: 0;
   }
 
   .content {
+    flex: 1;
+    min-width: 0;
+    max-width: 1200px;
     background: var(--bg-content);
     border: 1px solid var(--border);
     border-radius: 4px;
     padding: 40px 48px;
+  }
+
+  /* Comment panel */
+  .comment-panel {
+    width: 320px;
+    min-width: 320px;
+    position: sticky;
+    top: 0;
+    align-self: flex-start;
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+    margin-left: 16px;
+    background: var(--bg-content);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    transition: width 0.25s ease, min-width 0.25s ease, margin-left 0.25s ease, opacity 0.25s ease;
+  }
+
+  .comment-panel.hidden {
+    width: 0;
+    min-width: 0;
+    margin-left: 0;
+    opacity: 0;
+    overflow: hidden;
+    border: none;
+    padding: 0;
+  }
+
+  .comment-panel-header {
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .comment-panel-header .panel-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .panel-input-area {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+  }
+
+  .panel-input-area textarea {
+    flex: 1;
+    min-height: 36px;
+    max-height: 120px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    font-family: var(--font-sans);
+    background: var(--bg-content);
+    color: var(--text-primary);
+  }
+
+  .panel-input-area textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .panel-submit-btn {
+    font-size: 12px !important;
+    padding: 6px 12px !important;
+    white-space: nowrap;
+  }
+
+  .panel-section-group {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-section-group:last-child {
+    border-bottom: none;
+  }
+
+  .panel-section-heading {
+    padding: 10px 16px 4px;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-caption);
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .panel-section-heading:hover {
+    color: var(--accent);
+  }
+
+  .panel-comment-item {
+    padding: 8px 16px 10px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text-primary);
+    position: relative;
+  }
+
+  .panel-comment-item + .panel-comment-item {
+    border-top: 1px dashed var(--border);
+  }
+
+  .panel-comment-item .panel-quote {
+    font-size: 11px;
+    color: var(--text-caption);
+    background: var(--bg-comment);
+    padding: 2px 8px;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .panel-comment-item .panel-delete {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--text-caption);
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .panel-comment-item:hover .panel-delete {
+    opacity: 1;
+  }
+
+  .panel-comment-item .panel-delete:hover {
+    color: var(--color-danger);
   }
 
   /* Override github-markdown-css defaults for layout integration */
@@ -189,65 +327,8 @@
 
   .content input[type="checkbox"] { pointer-events: none; }
 
-  /* Section hover comment button */
+  /* Section wrapper */
   .section-wrapper { position: relative; }
-
-  .section-wrapper:hover .comment-btn {
-    opacity: 1;
-  }
-
-  .comment-btn {
-    position: absolute;
-    left: -36px;
-    top: 0;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    border: 1.5px solid var(--accent);
-    background: var(--bg-content);
-    color: var(--accent);
-    font-size: 16px;
-    line-height: 1;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .comment-btn:hover { background: var(--accent); color: var(--bg-content); }
-
-  /* Block-level comment buttons */
-  .block-wrapper {
-    position: relative;
-  }
-
-  .block-wrapper:hover > .block-comment-btn {
-    opacity: 1;
-  }
-
-  .block-comment-btn {
-    position: absolute;
-    left: -28px;
-    top: 2px;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 1px solid var(--border);
-    background: var(--bg-content);
-    color: var(--text-caption);
-    font-size: 12px;
-    line-height: 1;
-    cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .block-comment-btn:hover { border-color: var(--accent); color: var(--accent); }
 
   /* Comment form */
   .comment-form {
@@ -256,6 +337,14 @@
     border-radius: 4px;
     padding: 14px;
     margin: 12px 0 20px;
+  }
+
+  .comment-form.floating {
+    position: fixed;
+    z-index: 250;
+    width: 340px;
+    margin: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
   }
 
   .comment-form textarea {
@@ -338,7 +427,7 @@
 
   /* Selection tooltip */
   .selection-tooltip {
-    position: absolute;
+    position: fixed;
     background: var(--accent);
     color: var(--bg-page);
     border: none;
@@ -425,7 +514,7 @@
   /* Main layout with sidebar */
   .main-layout {
     display: flex;
-    height: calc(100vh - 50px);
+    height: 100vh;
     overflow: hidden;
   }
 
@@ -607,19 +696,11 @@
   .main-area .container {
     flex: 1;
     overflow-y: auto;
+    align-items: flex-start;
   }
 </style>
 </head>
 <body>
-
-<div class="header">
-  <h1>Plan Viewer</h1>
-  <div class="header-actions">
-    <span id="commentCount" class="comment-count" style="display:none">0 comments</span>
-    <button class="btn btn-primary" id="submitBtn" onclick="submitComments()" disabled style="display:none">コメントを送信</button>
-    <button class="btn btn-finish" id="finishBtn" onclick="finishReview()" style="display:none">レビュー完了</button>
-  </div>
-</div>
 
 <div class="main-layout">
   <div class="sidebar" id="sidebar">
@@ -632,13 +713,30 @@
   </div>
 
   <div class="main-area">
-    <div class="tab-bar" id="tabBar"></div>
+    <div class="tab-bar-row">
+      <div class="tab-bar" id="tabBar"></div>
+      <div class="header-actions">
+        <span id="commentCount" class="comment-count" style="display:none">0 comments</span>
+        <button class="btn btn-primary" id="submitBtn" onclick="submitComments()" disabled style="display:none">コメントを送信</button>
+        <button class="btn btn-finish" id="finishBtn" onclick="finishReview()" style="display:none">レビュー完了</button>
+      </div>
+    </div>
 
     <button class="selection-tooltip" id="selectionTooltip">コメントを追加</button>
 
     <div class="container">
       <div class="content markdown-body" id="content">
         <div class="loading">プランを選択してください</div>
+      </div>
+      <div class="comment-panel hidden" id="commentPanel">
+        <div class="comment-panel-header">
+          <span>Comments <span class="panel-count" id="panelCount"></span></span>
+        </div>
+        <div class="panel-input-area">
+          <textarea id="panelTextarea" placeholder="コメントを入力..." rows="2"></textarea>
+          <button class="btn btn-primary panel-submit-btn" id="panelSubmitBtn" onclick="addPanelComment()">追加</button>
+        </div>
+        <div id="panelBody"></div>
       </div>
       <div class="spinner" id="spinnerArea" style="display:none">修正中...</div>
     </div>
@@ -932,24 +1030,79 @@ async function loadPlan(project, feature) {
 }
 
 function renderExistingComments(key) {
+  renderCommentPanel(key);
+}
+
+function renderCommentPanel(key) {
+  const panel = document.getElementById('commentPanel');
+  const body = document.getElementById('panelBody');
+  const countEl = document.getElementById('panelCount');
   const comments = tabComments[key] || [];
-  // Re-add comment items to the DOM based on section headings
-  for (let i = 0; i < comments.length; i++) {
-    const c = comments[i];
-    const wrappers = document.querySelectorAll('.section-wrapper');
-    for (const wrapper of wrappers) {
-      const heading = wrapper.querySelector('h1, h2, h3');
-      if (heading && c.sectionHeading.endsWith(heading.textContent)) {
-        const item = document.createElement('div');
-        item.className = 'comment-item';
-        item.innerHTML = `
-          <button class="comment-delete" onclick="deleteComment(${i}, this)">&times;</button>
-          ${c.selectedText ? `<div class="selected-text">"${escapeHtml(c.selectedText).substring(0, 80)}"</div>` : ''}
-          <div>${escapeHtml(c.comment)}</div>
-        `;
-        heading.after(item);
-        break;
-      }
+
+  body.innerHTML = '';
+
+  // Always show panel when a plan is open (for comment input)
+  if (!key) {
+    panel.classList.add('hidden');
+    countEl.textContent = '';
+    return;
+  }
+
+  countEl.textContent = comments.length > 0 ? `${comments.length}` : '';
+
+  // Group by sectionHeading
+  const groups = new Map();
+  comments.forEach((c, idx) => {
+    const heading = c.sectionHeading || '(no section)';
+    if (!groups.has(heading)) groups.set(heading, []);
+    groups.get(heading).push({ ...c, idx });
+  });
+
+  for (const [heading, items] of groups) {
+    const group = document.createElement('div');
+    group.className = 'panel-section-group';
+
+    const headingEl = document.createElement('div');
+    headingEl.className = 'panel-section-heading';
+    // Strip markdown heading prefix for display
+    headingEl.textContent = heading.replace(/^#+\s*/, '');
+    headingEl.onclick = () => scrollToSection(heading);
+    group.appendChild(headingEl);
+
+    for (const c of items) {
+      const item = document.createElement('div');
+      item.className = 'panel-comment-item';
+      item.innerHTML = `
+        <button class="panel-delete" onclick="deleteComment(${c.idx})">&times;</button>
+        ${c.selectedText ? `<div class="panel-quote">"${escapeHtml(c.selectedText).substring(0, 60)}"</div>` : ''}
+        <div>${escapeHtml(c.comment)}</div>
+      `;
+      group.appendChild(item);
+    }
+
+    body.appendChild(group);
+  }
+
+  countEl.textContent = `${comments.length}`;
+  panel.classList.remove('hidden');
+}
+
+function scrollToSection(sectionHeading) {
+  const headingText = sectionHeading.replace(/^#+\s*/, '');
+  const wrappers = document.querySelectorAll('.section-wrapper');
+  for (const wrapper of wrappers) {
+    const h = wrapper.querySelector('h1, h2, h3');
+    if (h && h.textContent === headingText) {
+      const container = document.querySelector('.main-area .container');
+      const rect = wrapper.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      container.scrollTo({ top: container.scrollTop + rect.top - containerRect.top - 16, behavior: 'smooth' });
+      // Highlight
+      wrapper.style.transition = 'background 0.3s';
+      wrapper.style.background = 'var(--bg-selection)';
+      wrapper.style.borderRadius = '4px';
+      setTimeout(() => { wrapper.style.background = ''; }, 1500);
+      break;
     }
   }
 }
@@ -1053,13 +1206,7 @@ function wrapSections() {
     const wrapper = document.createElement('div');
     wrapper.className = 'section-wrapper';
 
-    const btn = document.createElement('button');
-    btn.className = 'comment-btn';
-    btn.textContent = '+';
-    btn.onclick = () => openCommentForm(wrapper, heading.textContent);
-
     heading.parentNode.insertBefore(wrapper, heading);
-    wrapper.appendChild(btn);
     wrapper.appendChild(heading);
 
     let next = wrapper.nextSibling;
@@ -1068,37 +1215,46 @@ function wrapSections() {
       next = next.nextSibling;
       wrapper.appendChild(moved);
     }
-
-    const blocks = wrapper.querySelectorAll(':scope > p, :scope > ul > li, :scope > ol > li, :scope > table, :scope > blockquote, :scope > pre');
-    blocks.forEach(block => {
-      const bw = document.createElement('div');
-      bw.className = 'block-wrapper';
-      block.parentNode.insertBefore(bw, block);
-      bw.appendChild(block);
-
-      const bbtn = document.createElement('button');
-      bbtn.className = 'block-comment-btn';
-      bbtn.textContent = '+';
-      bbtn.onclick = () => {
-        const blockText = block.textContent.trim().substring(0, 80);
-        openCommentForm(wrapper, heading.textContent, blockText);
-      };
-      bw.appendChild(bbtn);
-    });
   });
 }
 
-function openCommentForm(wrapper, sectionHeading, blockText) {
-  if (wrapper.querySelector('.comment-form')) return;
+function closeAllCommentForms() {
+  document.querySelectorAll('.comment-form').forEach(f => f.remove());
+}
+
+function addPanelComment() {
+  if (!activeKey) return;
+  const textarea = document.getElementById('panelTextarea');
+  const text = textarea.value.trim();
+  if (!text) return;
+
+  const comment = { sectionHeading: '(全体)', selectedText: undefined, comment: text };
+  if (!tabComments[activeKey]) tabComments[activeKey] = [];
+  tabComments[activeKey].push(comment);
+
+  textarea.value = '';
+  renderCommentPanel(activeKey);
+  updateCount();
+}
+
+function openCommentForm(wrapper, sectionHeading, blockText, selectionRect) {
+  // Close any existing inline form (single form policy)
+  closeAllCommentForms();
 
   const selectedText = blockText || window.getSelection().toString().trim();
 
   const form = document.createElement('div');
-  form.className = 'comment-form';
+  form.className = 'comment-form floating';
+
+  // Store section info on the form element for addComment
+  const heading = wrapper?.querySelector('h1, h2, h3');
+  const prefix = heading ? '#'.repeat(parseInt(heading.tagName[1])) + ' ' : '## ';
+  form.dataset.sectionHeading = `${prefix}${sectionHeading}`;
+  form.dataset.selectedText = selectedText || '';
 
   let selectedHtml = '';
   if (selectedText) {
-    selectedHtml = `<div class="selected-text">選択: "${selectedText.substring(0, 100)}${selectedText.length > 100 ? '...' : ''}"</div>`;
+    selectedHtml = `<div class="selected-text">"${escapeHtml(selectedText).substring(0, 100)}${selectedText.length > 100 ? '...' : ''}"</div>`;
   }
 
   form.innerHTML = `
@@ -1106,51 +1262,44 @@ function openCommentForm(wrapper, sectionHeading, blockText) {
     <textarea placeholder="コメントを入力..."></textarea>
     <div class="form-actions">
       <button class="btn btn-secondary" onclick="this.closest('.comment-form').remove()">キャンセル</button>
-      <button class="btn btn-primary" onclick="addComment(this, '${sectionHeading.replace(/'/g, "\\'")}', '${(selectedText || '').replace(/'/g, "\\'")}')">追加</button>
+      <button class="btn btn-primary" onclick="addCommentFromForm(this)">追加</button>
     </div>
   `;
 
-  const heading = wrapper.querySelector('h1, h2, h3');
-  heading.after(form);
+  // Position as floating overlay below the selection
+  if (selectionRect) {
+    form.style.left = `${selectionRect.left}px`;
+    form.style.top = `${selectionRect.bottom + 4}px`;
+  }
+
+  document.body.appendChild(form);
   form.querySelector('textarea').focus();
 }
 
-function addComment(btn, sectionHeading, selectedText) {
+function addCommentFromForm(btn) {
   if (!activeKey) return;
-
   const form = btn.closest('.comment-form');
-  const textarea = form.querySelector('textarea');
-  const text = textarea.value.trim();
+  const text = form.querySelector('textarea').value.trim();
   if (!text) return;
 
-  const heading = form.closest('.section-wrapper').querySelector('h1, h2, h3');
-  const prefix = heading ? '#'.repeat(parseInt(heading.tagName[1])) + ' ' : '## ';
-  const comment = { sectionHeading: `${prefix}${sectionHeading}`, selectedText: selectedText || undefined, comment: text };
+  const sectionHeading = form.dataset.sectionHeading || '(全体)';
+  const selectedText = form.dataset.selectedText || undefined;
+  const comment = { sectionHeading, selectedText, comment: text };
 
   if (!tabComments[activeKey]) tabComments[activeKey] = [];
   tabComments[activeKey].push(comment);
 
-  const comments = tabComments[activeKey];
-  const idx = comments.length - 1;
-  const item = document.createElement('div');
-  item.className = 'comment-item';
-  item.innerHTML = `
-    <button class="comment-delete" onclick="deleteComment(${idx}, this)">&times;</button>
-    ${selectedText ? `<div class="selected-text">"${selectedText.substring(0, 80)}${selectedText.length > 80 ? '...' : ''}"</div>` : ''}
-    <div>${escapeHtml(text)}</div>
-  `;
-  form.replaceWith(item);
+  form.remove();
+  renderCommentPanel(activeKey);
   updateCount();
 }
 
-function deleteComment(idx, btn) {
+
+function deleteComment(idx) {
   if (!activeKey) return;
   tabComments[activeKey].splice(idx, 1);
-  btn.closest('.comment-item').remove();
+  renderCommentPanel(activeKey);
   updateCount();
-  document.querySelectorAll('.comment-item .comment-delete').forEach((b, i) => {
-    b.onclick = () => deleteComment(i, b);
-  });
 }
 
 function updateCount() {
@@ -1249,23 +1398,66 @@ function startPlanPoller(project, feature) {
   featurePollers[key] = state;
 }
 
+// Find the nearest section heading for a given node inside #content
+function findNearestSection(node) {
+  const el = node.nodeType === 3 ? node.parentElement : node;
+  // Check if inside a section-wrapper
+  const wrapper = el?.closest?.('.section-wrapper');
+  if (wrapper) {
+    const heading = wrapper.querySelector('h1, h2, h3');
+    return { wrapper, heading };
+  }
+  // Fallback: find the closest preceding heading
+  const content = document.getElementById('content');
+  if (!content?.contains(el)) return null;
+  const allHeadings = [...content.querySelectorAll('h1, h2, h3')];
+  let nearest = null;
+  for (const h of allHeadings) {
+    if (el.compareDocumentPosition(h) & Node.DOCUMENT_POSITION_PRECEDING) {
+      nearest = h;
+    }
+  }
+  if (nearest) {
+    return { wrapper: nearest.closest('.section-wrapper'), heading: nearest };
+  }
+  return { wrapper: null, heading: null };
+}
+
+// Find the nearest block-level element for insertion
+function findInsertionAnchor(node) {
+  const el = node.nodeType === 3 ? node.parentElement : node;
+  const blockTags = new Set(['P', 'LI', 'BLOCKQUOTE', 'PRE', 'TABLE', 'UL', 'OL', 'DIV']);
+  let current = el;
+  const content = document.getElementById('content');
+  // If inside a table, use the table element as anchor
+  const table = el.closest?.('table');
+  if (table && content.contains(table)) {
+    return table;
+  }
+  while (current && current !== content) {
+    if (blockTags.has(current.tagName) && current.parentElement?.closest?.('.section-wrapper')) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  return null;
+}
+
 // Selection-based comment tooltip
 document.addEventListener('mouseup', () => {
   const tooltip = document.getElementById('selectionTooltip');
   const sel = window.getSelection();
   const text = sel.toString().trim();
 
-  // Hide tooltip if not reviewing or no selection
-  const activeTab = tabs.find(t => t.key === activeKey);
-  const plan = activeTab ? allPlans.find(p => p.project === activeTab.project && p.feature === activeTab.feature) : null;
-  if (!plan?.reviewing || !text || text.length < 2) {
+  // Hide tooltip if no active plan or no selection
+  if (!activeKey || !text || text.length < 2) {
     tooltip.style.display = 'none';
     return;
   }
 
   const anchorNode = sel.anchorNode;
-  const wrapper = anchorNode?.parentElement?.closest?.('.section-wrapper');
-  if (!wrapper) {
+  const content = document.getElementById('content');
+  if (!content?.contains(anchorNode)) {
     tooltip.style.display = 'none';
     return;
   }
@@ -1275,11 +1467,16 @@ document.addEventListener('mouseup', () => {
   const container = document.querySelector('.main-area .container');
   tooltip.style.display = 'block';
   tooltip.style.left = `${rect.left + rect.width / 2 - 50}px`;
-  tooltip.style.top = `${rect.top + (container ? container.scrollTop : window.scrollY) - 32}px`;
+  tooltip.style.top = `${rect.top - 36}px`;
+
+  // Capture rect now since selection may be lost on click
+  const selRect = { left: rect.left, top: rect.top, bottom: rect.bottom, right: rect.right };
 
   tooltip.onclick = () => {
-    const heading = wrapper.querySelector('h1, h2, h3');
-    if (heading) openCommentForm(wrapper, heading.textContent);
+    const section = findNearestSection(anchorNode);
+    const sectionHeading = section?.heading?.textContent || '(全体)';
+    const wrapper = section?.wrapper;
+    openCommentForm(wrapper, sectionHeading, null, selRect);
     tooltip.style.display = 'none';
   };
 });
@@ -1294,13 +1491,22 @@ function updateReviewUI() {
   const tab = tabs.find(t => t.key === activeKey);
   const plan = tab ? allPlans.find(p => p.project === tab.project && p.feature === tab.feature) : null;
   const isReviewing = plan?.reviewing || false;
-  document.getElementById('submitBtn').style.display = isReviewing ? '' : 'none';
+  const hasActiveTab = !!tab;
+  // Submit button: always visible when a plan is open
+  document.getElementById('submitBtn').style.display = hasActiveTab ? '' : 'none';
+  // Finish button: only during annotation-cycle review
   document.getElementById('finishBtn').style.display = isReviewing ? '' : 'none';
-  // Comment buttons visibility
-  document.querySelectorAll('.comment-btn, .block-comment-btn').forEach(btn => {
-    btn.style.display = isReviewing ? '' : 'none';
-  });
+  // Re-render panel
+  if (activeKey) renderCommentPanel(activeKey);
 }
+
+// Close floating comment form when clicking outside
+document.addEventListener('mousedown', (e) => {
+  const form = document.querySelector('.comment-form.floating');
+  if (form && !form.contains(e.target) && e.target.id !== 'selectionTooltip') {
+    form.remove();
+  }
+});
 
 init();
 </script>
